@@ -115,7 +115,19 @@ Content checklist for editors: [references/geo-content-checklist.md](references/
 
 ## Execution order (`full` / `pre-deploy` / `post-deploy`)
 
-Run tracks sequentially. Parallelize only independent fetches **against the primary base** (robots, sitemap, homepage HTML).
+**Preferred schedule:** parallel **waves** (Site lane + Market lane) — see [references/parallel-waves.md](references/parallel-waves.md).
+
+| Wave | What |
+|------|------|
+| **0** | Environment + URL + P0 pages (blocking; no primary fetch before this) |
+| **1** | Parallel: technical ‖ markup ‖ on-page ‖ structure ‖ authority (prod only) ‖ SERP |
+| **1b** | Parallel: content quality ‖ GEO (same primary page; may start with Wave 1) |
+| **2** | Competitors (after SERP unless user named them; skip in `quick`/`page` unless asked) |
+| **3** | Merge: dedupe → prioritization → one report (orchestrator only) |
+
+**Fallback** if parallel agents are unavailable: run tracks A→I below sequentially. Still OK to parallelize independent fetches **against the primary base** (robots, sitemap, homepage HTML) inside a track.
+
+Track contracts below are unchanged — always **Read** each Aaron `SKILL.md` before that track.
 
 ### Track A — Technical (`technical-seo-checker`)
 
