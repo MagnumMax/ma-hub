@@ -26,7 +26,11 @@
 ### 3. Skills — по задаче
 Глубокие плейбуки (grill-me, writing-plans, impeccable, shadcn, vercel-react…). Команды **ссылаются** на навыки; дублировать весь текст навыка в команду не нужно.
 
-**MA-owned skills** (оркестраторы Monster Automation, напр. `seo-audit`) живут в **ma-hub** → `skills/` и ставятся скриптом `install-skills.sh`. Сторонние skills (Aaron, Vercel…) — отдельно, через weekly, не в хабе.
+**MA-owned skills** (оркестраторы Monster Automation, напр. `seo-geo-audit`) живут в **ma-hub** → `skills/` и ставятся скриптом `install-skills.sh`.
+
+**Внешние skills** (Aaron, Vercel, ponytail, impeccable…) — **не** копируются в хаб. В хабе только реестр ссылок: `registry/external-skills.md` + `registry/external-skills.manifest`. Установка/обновление с upstream: `bootstrap/install-external-skills.sh` (weekly / bootstrap). При запуске `/MA-*` агент **читает** актуальный `SKILL.md` с диска (пути — в реестре).
+
+**Cursor-native** (`review-bugbot`, `review-security`) — из `~/.cursor/skills-cursor/`, не через manifest.
 
 ### 4. Standards (эта папка в **ma-hub**) — закон продукта
 Общие требования: предпочтения UI, авторизация, канбан, качество, релиз.  
@@ -52,7 +56,7 @@
 | Всегда так со мной разговаривать | **Rule** (+ бэкап в `docs/user-rules.md`) |
 | Запустить сценарий одной кнопкой | **Command `/MA-…`** в `ma-hub/commands/` |
 | MA-оркестратор (свой плейбук) | **Skill** в `ma-hub/skills/` |
-| Глубокий сторонний метод (TDD, Aaron SEO…) | **Skill** вне хаба (weekly / skills add) |
+| Глубокий сторонний метод (TDD, Aaron SEO, ponytail…) | **Ссылка** в `registry/external-skills.*` + install-external; не копировать тело |
 | «Во всех продуктах канбан выглядит так» | **Standard** (`02-product-preferences.md` и др.) |
 
 ## Конфликты — как решаем

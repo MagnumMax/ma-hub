@@ -28,4 +28,14 @@ for f in "${files[@]}"; do
   echo "installed ${base}"
 done
 
+# Remove obsolete MA commands left in local cache after renames/deletes in hub
+shopt -s nullglob
+for local_f in "${DEST}"/MA-*.md; do
+  base="$(basename "$local_f")"
+  if [[ ! -f "${HUB}/commands/${base}" ]]; then
+    rm -f "$local_f"
+    echo "removed obsolete ${base}"
+  fi
+done
+
 echo "OK: commands installed to ${DEST}"

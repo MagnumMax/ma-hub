@@ -10,9 +10,10 @@
 | Стандарты продуктов | GitHub `ma-hub` / `standards/` | `git clone` + `bootstrap` |
 | Команды `/MA-*` | GitHub `ma-hub` / `commands/` | `bootstrap` → `~/.cursor/commands/` |
 | MA-owned skills | GitHub `ma-hub` / `skills/` | `bootstrap` → `~/.cursor/skills/` (+ agents/claude) |
+| Реестр внешних skills | GitHub `ma-hub` / `registry/external-skills.*` | `install-external-skills.sh` тянет свежие с upstream |
 | Путь к хабу | `~/.config/ma-hub/config` | пишет `bootstrap` |
 | User Rules | Cursor Settings + бэкап `docs/user-rules.md` | вручную из файла после bootstrap |
-| Сторонние skills / extensions | weekly script | `~/bin/update-cursor-weekly.sh` |
+| Сторонние skills (локальные копии) | upstream → диск | `install-external-skills.sh` / weekly |
 | Секреты проектов | не в ma-hub | password manager / per-project env |
 
 ## Новый ноутбук (чеклист)
@@ -21,7 +22,7 @@
 2. `git clone https://github.com/MagnumMax/ma-hub.git ~/ma-hub`
 3. `~/ma-hub/bootstrap/bootstrap.sh`
 4. Восстановить **4** User Rules из `docs/user-rules.md` (включая правило про ma-hub)
-5. Запустить `~/bin/update-cursor-weekly.sh` (сторонние skills + CLI)
+5. Запустить `~/ma-hub/bootstrap/install-external-skills.sh` (сторонние skills с upstream) и/или `~/bin/update-cursor-weekly.sh`
 6. `ma-hub-check-drift` — должно быть OK
 7. Открыть проект → `/MA-help`
 

@@ -16,9 +16,9 @@ cd ~/ma-hub
 1. Запоминает путь хаба (`~/.config/ma-hub/config`)
 2. Ставит команды `/MA-*` в `~/.cursor/commands/`
 3. Ставит MA-owned skills в `~/.cursor/skills/` (+ ссылки для agents/claude)
-4. Печатает инструкцию по восстановлению User Rules
+4. Печатает инструкцию по восстановлению User Rules и установке **внешних** skills
 
-Сторонние skills и расширения — отдельным weekly-скриптом (см. ниже).
+Внешние skills (Aaron, Vercel, ponytail…): реестр `registry/external-skills.*` → `./bootstrap/install-external-skills.sh` (или weekly).
 
 ## Еженедельное обновление (latest с main)
 
@@ -44,18 +44,18 @@ ma-hub-check-drift
 | `standards/` | Закон продукта (дашборд, канбан, auth, релиз…) |
 | `commands/` | Источник команд `/MA-*` |
 | `skills/` | MA-owned skills (оркестраторы Monster Automation) |
-| `bootstrap/` | Установка, pull, проверка drift |
+| `registry/` | Проекты + **ссылки** на внешние skills (`external-skills.*`) |
+| `bootstrap/` | Установка, pull, drift, install-external-skills |
 | `templates/` | Тонкая ссылка для каждого проекта |
 | `docs/user-rules.md` | Бэкап личных правил Cursor |
 | `docs/hub-maintenance.md` | Как не забыть обновить хаб |
-| `registry/` | Список ваших продуктов и статус revise |
 
 ## Слои (коротко)
 
 - **Rules (Cursor)** — всегда: язык, уточнения, «Следующие задачи», закон ma-hub (бэкап в `docs/user-rules.md`)
 - **Commands `/MA-*`** — ритуалы по вызову (ставятся из этого репо)
 - **MA-skills** — оркестраторы MA (ставятся из `skills/`)
-- **Сторонние skills** — Aaron, Vercel… (weekly update, не в хабе)
+- **Внешние skills** — только ссылки в `registry/`; тела с upstream через `install-external-skills.sh`
 - **Standards** — требования к продуктам (эта папка `standards/`)
 
 ## Если меняете команды / skills / стандарты

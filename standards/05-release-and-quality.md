@@ -9,9 +9,11 @@
 - [ ] Env на проде актуальны
 - [ ] Миграции (если есть) понятны и обратимы или с планом
 - [ ] Preview / staging проверен, если доступен
+- [ ] Проверка простоты (`ponytail-review`) в отчёте `/MA-deploy`; при `net ≤ -80` в safe — решение до merge
 
 ## Релиз-ритуал
-Использовать `/MA-deploy` — полный пайплайн (ревью, тесты, preview, merge, prod, smoke).
+Использовать `/MA-deploy` — полный пайплайн (ревью, ponytail, тесты, build, merge, prod, smoke).
+Внешние skills подтягиваются из upstream по `registry/external-skills.*`, не из копий в хабе.
 
 ## После релиза
 - Smoke на прод

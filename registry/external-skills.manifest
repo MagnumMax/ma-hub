@@ -1,0 +1,83 @@
+# external-skills.manifest — machine-readable package list for install-external-skills.sh
+# Format (one package per logical block):
+#   PACKAGE <owner/repo>
+#   SKILL <name>
+#   SKILL <name>
+# Blank line separates packages. Lines starting with # are comments.
+# Do not store skill body text in ma-hub — only sources. See external-skills.md.
+
+PACKAGE mattpocock/skills
+SKILL grill-me
+SKILL improve-codebase-architecture
+
+PACKAGE obra/superpowers
+SKILL using-superpowers
+SKILL brainstorming
+SKILL writing-plans
+SKILL executing-plans
+SKILL requesting-code-review
+SKILL receiving-code-review
+SKILL systematic-debugging
+SKILL test-driven-development
+SKILL verification-before-completion
+
+PACKAGE garrytan/gstack
+SKILL gstack
+SKILL office-hours
+
+PACKAGE dietrichgebert/ponytail
+SKILL ponytail
+SKILL ponytail-review
+
+PACKAGE pbakaus/impeccable
+SKILL impeccable
+
+PACKAGE nextlevelbuilder/ui-ux-pro-max-skill
+SKILL ui-ux-pro-max
+
+PACKAGE leonxlnx/taste-skill
+SKILL design-taste-frontend
+SKILL high-end-visual-design
+SKILL redesign-existing-projects
+
+PACKAGE shadcn/ui
+SKILL shadcn
+
+PACKAGE vercel-labs/agent-skills
+SKILL vercel-react-best-practices
+SKILL web-design-guidelines
+
+PACKAGE wshobson/agents
+SKILL nextjs-app-router-patterns
+
+PACKAGE supabase/agent-skills
+SKILL supabase-postgres-best-practices
+
+PACKAGE millionco/react-doctor
+SKILL react-doctor
+
+PACKAGE vercel-labs/agent-browser
+SKILL agent-browser
+
+PACKAGE vercel-labs/skills
+SKILL find-skills
+
+PACKAGE aaron-he-zhu/aaron-marketing-skills
+SKILL keyword-research
+SKILL competitor-analysis
+SKILL serp-analysis
+SKILL content-gap-analysis
+SKILL content-writer
+SKILL geo-content-optimizer
+SKILL serp-markup-builder
+SKILL page-play-builder
+SKILL content-quality-auditor
+SKILL technical-seo-checker
+SKILL on-page-seo-checker
+SKILL site-structure-optimizer
+SKILL domain-authority-auditor
+SKILL rank-tracker
+SKILL performance-monitor
+SKILL offsite-signal-analyzer
+SKILL entity-registry
+SKILL memory-management

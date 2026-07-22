@@ -53,7 +53,7 @@ argument-hint: "<описание идеи или фичи>"
 - Запускай работу по плану (`executing-plans` / `using-superpowers`)
 - Перед финишем: `verification-before-completion`
 - Если просили ревью — `requesting-code-review`
-- Держиbias простоты: `ponytail` (не усложняй без нужды)
+- Держи bias простоты: прочитай skill **`ponytail`** с диска (пути — `$MA_HUB_ROOT/registry/external-skills.md`, пакет `dietrichgebert/ponytail`) и следуй ему; **не** копируй текст skill в план
 
 ## Стиль ответа
 - Русский, коротко, по делу

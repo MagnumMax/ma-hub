@@ -31,6 +31,7 @@ if [[ ${#skill_dirs[@]} -eq 0 ]]; then
   exit 0
 fi
 
+installed_names=()
 for dir in "${skill_dirs[@]}"; do
   name="$(basename "$dir")"
   if [[ ! -f "${dir}/SKILL.md" ]]; then
@@ -50,7 +51,25 @@ for dir in "${skill_dirs[@]}"; do
 
   ln -sfn "$dest" "${AGENTS_SKILLS}/${name}"
   ln -sfn "$dest" "${CLAUDE_SKILLS}/${name}"
+  installed_names+=("$name")
   echo "installed skill ${name} → ${dest}"
+done
+
+# Remove known renamed/deleted MA orchestrators from local cache.
+# Do NOT prune arbitrary ~/.cursor/skills entries — third-party packages (Aaron, etc.) live there too.
+for obsolete in seo-audit; do
+  found=0
+  for name in "${installed_names[@]+"${installed_names[@]}"}"; do
+    [[ "$name" == "$obsolete" ]] && found=1 && break
+  done
+  if [[ "$found" -eq 0 ]]; then
+    if [[ -e "${CURSOR_SKILLS}/${obsolete}" || -L "${AGENTS_SKILLS}/${obsolete}" || -L "${CLAUDE_SKILLS}/${obsolete}" || -d "${AGENTS_SKILLS}/${obsolete}" || -d "${CLAUDE_SKILLS}/${obsolete}" ]]; then
+      rm -rf "${CURSOR_SKILLS}/${obsolete}"
+      rm -rf "${AGENTS_SKILLS}/${obsolete}"
+      rm -rf "${CLAUDE_SKILLS}/${obsolete}"
+      echo "removed obsolete skill ${obsolete}"
+    fi
+  fi
 done
 
 echo "OK: MA skills installed from ${SKILLS_SRC}"

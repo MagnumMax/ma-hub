@@ -7,8 +7,9 @@ alwaysApply: true
 
 When editing Monster Automation assets in this repo or advising about `/MA-*`:
 
-1. **Truth lives here:** `commands/`, `skills/`, `standards/`, `docs/user-rules.md`
+1. **Truth lives here:** `commands/`, `skills/`, `standards/`, `registry/`, `docs/user-rules.md`
 2. **Never** treat `~/.cursor/commands/` or `~/.cursor/skills/` as the place to “save” a new MA command/skill alone
-3. After edits: run `bootstrap/install-commands.sh` and `bootstrap/install-skills.sh`, then `bootstrap/check-local-drift.sh`
-4. Remind the user that **commit + push** of ma-hub is required for other projects/machines to receive changes (do not commit unless asked — but always state that push is pending)
-5. Full checklist: `docs/hub-maintenance.md`
+3. **External skills:** only links in `registry/external-skills.*` — never vendor skill body text into the hub; agents must `Read` local `SKILL.md` at runtime
+4. After edits: run `bootstrap/install-commands.sh` and `bootstrap/install-skills.sh`, then `bootstrap/check-local-drift.sh` (and `install-external-skills.sh` if the registry changed)
+5. Remind the user that **commit + push** of ma-hub is required for other projects/machines to receive changes (do not commit unless asked — but always state that push is pending)
+6. Full checklist: `docs/hub-maintenance.md`

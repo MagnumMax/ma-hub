@@ -47,11 +47,13 @@
 ## 4. Monster Automation — источник правды в ma-hub
 
 ```
-- Команды /MA-*, MA-owned skills и стандарты живут только в репозитории ma-hub (обычно ~/ma-hub: папки commands/, skills/, standards/). Локальные ~/.cursor/commands и ~/.cursor/skills — кэш после bootstrap/pull, не место для правок «только на этом ноутбуке».
+- Команды /MA-*, MA-owned skills и стандарты живут только в репозитории ma-hub (обычно ~/ma-hub: папки commands/, skills/, standards/, registry/). Локальные ~/.cursor/commands и ~/.cursor/skills — кэш после bootstrap/pull, не место для правок «только на этом ноутбуке».
 
-- Если меняешь любую MA-команду, MA-skill, стандарт или этот бэкап user-rules: править файлы в ma-hub → прогнать bootstrap/install-commands.sh и bootstrap/install-skills.sh → bootstrap/check-local-drift.sh → commit и push ma-hub (если пользователь не просил commit — явно сказать, что без push другие проекты не увидят изменения).
+- Внешние skills (ponytail, Aaron, Vercel…): в ma-hub только ссылки (registry/external-skills.*), не копии текста. Установка с upstream: bootstrap/install-external-skills.sh. Команды читают актуальный SKILL.md с диска.
 
-- Запрещено оставлять новую /MA-* или MA-skill только в ~/.cursor/. Подробности: docs/hub-maintenance.md в ma-hub.
+- Если меняешь любую MA-команду, MA-skill, стандарт, registry внешних skills или этот бэкап user-rules: править файлы в ma-hub → прогнать bootstrap/install-commands.sh и bootstrap/install-skills.sh (и install-external-skills.sh при изменении registry) → bootstrap/check-local-drift.sh → commit и push ma-hub (если пользователь не просил commit — явно сказать, что без push другие проекты не увидят изменения).
+
+- Запрещено оставлять новую /MA-* или MA-skill только в ~/.cursor/. Запрещено вендорить чужой SKILL.md в ma-hub. Подробности: docs/hub-maintenance.md в ma-hub.
 ```
 
 ---

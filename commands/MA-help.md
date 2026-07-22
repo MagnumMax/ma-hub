@@ -14,8 +14,9 @@ argument-hint: ""
 2. иначе `~/ma-hub`, если есть `standards/`
 3. иначе скажи запустить bootstrap: `git clone … && ./bootstrap/bootstrap.sh`
 
-**Истина только в репозитории ma-hub** (`commands/`, `skills/`, `standards/`).  
+**Истина только в репозитории ma-hub** (`commands/`, `skills/`, `standards/`, `registry/`).  
 `~/.cursor/commands/` и `~/.cursor/skills/` — кэш после `bootstrap` / `ma-hub-pull`.  
+Внешние skills: ссылки в `registry/external-skills.md`, тела — с upstream через `install-external-skills.sh`.  
 Стандарты: `$MA_HUB_ROOT/standards/` (VERSION в том файле).
 
 ## Ритуалы
@@ -30,13 +31,13 @@ argument-hint: ""
 
 | Команда | Когда вызывать |
 |---------|----------------|
-| `/MA-deploy` | Полный цикл перед продом (проверки → push → CI → PR) |
+| `/MA-deploy` | Полный цикл перед продом (Bugbot, security, ponytail, проверки → push → CI → PR → prod) |
 
-## SEO
+## SEO + GEO
 
 | Команда | Когда вызывать |
 |---------|----------------|
-| `/MA-seo-audit` | Полный SEO-аудит (техника, страница, структура, доверие домена) через Aaron |
+| `/MA-seo-geo-audit` | Полный SEO + GEO аудит через Aaron (поиск и ответы ИИ); сначала среда `local`/`prod` (по умолчанию спрашивает, рекомендует local) |)
 
 ## Справка
 

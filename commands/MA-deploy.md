@@ -21,10 +21,11 @@ argument-hint: [auto | check-only | skip-merge]
 | Режим | Как вызвать | Починка блокеров |
 |-------|-------------|------------------|
 | **safe** (по умолчанию) | `/MA-deploy`, `/MA-deploy check-only`, `/MA-deploy skip-merge` | **Не чинить самому.** Найти проблемы → таблица блокеров → **остановить и ждать** решения пользователя (чинить / не чинить / отложить) |
-| **auto** | `/MA-deploy auto` (можно комбинировать: `auto check-only`, `auto skip-merge`) | Чинить **всё**, что блокирует деплой (**толстый CI → thin template**, ревью Critical, typecheck, lint, i18n, tests, react-doctor, build, bundle-budget, supabase, CI fails) **без вопросов и без паузы** — для ночных/уверенных прогонов |
+| **auto** | `/MA-deploy auto` (можно комбинировать: `auto check-only`, `auto skip-merge`) | Чинить **всё**, что блокирует деплой (**толстый CI → thin template**, ревью Critical, typecheck, lint, i18n, tests, react-doctor, build, bundle-budget, supabase, CI fails) **без вопросов и без паузы** — для ночных/уверенных прогонов. **Исключение:** ponytail/упрощения — только отчёт, не чинить |
 
 **Правила safe (default):**
 - Любой Critical из code review / security, **толстый CI**, любой fail typecheck/lint/i18n/tests/doctor/build/bundle/supabase/CI → **стоп**, заполнить Таблицу 6, одна строка «жду решения», **не** править код, **не** commit, **не** push
+- Ponytail: `net ≤ -80` → **стоп** (Таблица 6); меньший объём — только отчёт. **Никогда** не применять упрощения без явного «чини»
 - Important/Minor — только в отчёт, не чинить
 - Продолжай pipeline только если блокеров нет **или** пользователь явно сказал «чини» / «продолжай» / выбрал пункты
 
@@ -32,12 +33,13 @@ argument-hint: [auto | check-only | skip-merge]
 - Не спрашивай подтверждений на починку
 - Перед фиксом сначала найди root cause (`systematic-debugging`), потом loop: fix → атомарный commit → re-check, максимум 5 итераций на фазу
 - Если не сходится за 5 итераций — стоп с отчётом (даже в auto)
+- **Исключение — ponytail/упрощения:** **никогда** не применять автоматически (даже при `net ≤ -80`). Только отчёт; при `net ≤ -80` пометить в сводке и **продолжить** релиз
 
 ## Pipeline (без Vercel Preview)
 
 ```
 /MA-deploy
-├── Phase 1    ← Локально: Bugbot + security review, typecheck, lint, i18n, tests
+├── Phase 1    ← Локально: Bugbot + security + ponytail-review, typecheck, lint, i18n, tests
 ├── Phase 2    ← react-doctor (только локально)
 ├── Phase 3    ← build (≈ Vercel) + bundle-budget — финальный gate перед push
 ├── Phase 3.5  ← Supabase gate (миграции / edge) если есть в diff
@@ -55,7 +57,7 @@ argument-hint: [auto | check-only | skip-merge]
 
 | Фаза | Что делает | Где |
 |------|------------|-----|
-| 1 | Bugbot + security review, typecheck, lint, i18n, tests | локально |
+| 1 | Bugbot + security + ponytail-review, typecheck, lint, i18n, tests | локально |
 | 2 | react-doctor | локально |
 | 3 | build (≈ Vercel) + bundle-budget | локально, **перед push** |
 | 3.5 | Supabase: миграции / edge (если есть в diff) | локально / Supabase MCP |
@@ -74,8 +76,9 @@ argument-hint: [auto | check-only | skip-merge]
 
 | Проверка | Где | Как |
 |----------|-----|-----|
-| Code review (Bugbot) | Phase 1 | skill `review-bugbot` |
-| Security review | Phase 1 | skill `review-security` (+ `/security` при auth/PII) |
+| Code review (Bugbot) | Phase 1 | skill `review-bugbot` (Cursor-native) |
+| Security review | Phase 1 | skill `review-security` (Cursor-native; + `/security` при auth/PII) |
+| Ponytail (простота) | Phase 1 | skill `ponytail-review` (external, см. `registry/external-skills.md`) |
 | Typecheck | Phase 1 + Phase 5 CI | `pnpm typecheck` |
 | Lint | Phase 1 only | `pnpm lint` |
 | i18n | Phase 1 only | `pnpm i18n:*` |
@@ -183,20 +186,38 @@ Baseline: `.react-doctor/baseline.json`. Если файла нет — созд
    - Если в проекте/diff есть **auth / PII / платежи / роли** — дополнительно прогони логику команды `/security` (глубокий API/IDOR pass) и смержи Critical в одну Таблицу 6
    - Critical = блокер; **safe** стоп / **auto** fix+commit
 
-3. **Typecheck** — обязательно локально (если есть script или CI job `typecheck`)
+3. **Ponytail review — всегда (read-only, внешний skill)**
+   - **Не копировать** текст skill в отчёт/команду. Источник: `registry/external-skills.md` → пакет `dietrichgebert/ponytail`
+   - Разреши путь (первый найденный):
+     1. `~/.agents/skills/ponytail-review/SKILL.md`
+     2. `~/.cursor/skills/ponytail-review/SKILL.md`
+     3. `~/.claude/skills/ponytail-review/SKILL.md`
+   - **Прочитай** актуальный `SKILL.md` и следуй ему целиком (формат находок, теги, `net: -N`)
+   - Scope как у Bugbot: `branch changes` vs `main`; если только грязное дерево без коммитов — uncommitted changes
+   - Если `SKILL.md` не найден → блокер: «внешний skill `ponytail-review` не установлен» → Таблица 6: запустить `$MA_HUB_ROOT/bootstrap/install-external-skills.sh` (или weekly). **Не** подставлять замороженную копию из памяти
+   - Запиши в отчёт: список находок (одна строка на finding по формату skill) + итоговый `net: -N` (или `Lean already. Ship.`)
+   - **Политика (не автофикс):**
+     - Находки **никогда** не применяются автоматически (ни safe, ни auto) — только отчёт
+     - Если `Lean already. Ship.` или `net` отсутствует / `net: 0` / `net` > -80 (например `-20`) → ✅ только отчёт, не блокер
+     - Если `net ≤ -80` (например `-80`, `-120`):
+       - **safe:** блокер → Таблица 6 + стоп; ждать «чини» / «не чинить» / «продолжай» / «отложить»
+       - **auto:** **не чинить**, пометить в Таблице 1 (`Ponytail net`) и Таблице 2, **продолжить** pipeline
+   - Чинить ponytail только после явного «чини» / выбора пунктов (атомарный commit `refactor(simplify): …` на пункт или группу)
+
+4. **Typecheck** — обязательно локально (если есть script или CI job `typecheck`)
    - Next.js с typegen: `npx next typegen && pnpm typecheck`
    - иначе: команда из «План проекта»
    - fail → **safe:** стоп; **auto:** `systematic-debugging` → fix + commit
 
-4. **Lint** — из «План проекта». Обычно **только локально** (Phase 1).
+5. **Lint** — из «План проекта». Обычно **только локально** (Phase 1).
    - fail → safe стоп / auto fix+commit
 
-5. **i18n** — из «План проекта», если scripts есть. **Только локально**:
+6. **i18n** — из «План проекта», если scripts есть. **Только локально**:
    - типично: `i18n:check`, `i18n:cyrillic`, `i18n:parity`, `i18n:ui`
    - Пропусти если scripts нет
    - fail → safe стоп / auto fix+commit
 
-6. **Tests** — из «План проекта». Обязательно локально; если есть CI job `test` — дублируется в Phase 5
+7. **Tests** — из «План проекта». Обязательно локально; если есть CI job `test` — дублируется в Phase 5
    - fail → safe стоп / auto fix+commit
 
 **Build здесь не запускаем** — он в Phase 3.
@@ -222,14 +243,15 @@ Baseline: `.react-doctor/baseline.json`. Если файла нет — созд
 **Порядок коммитов в loop:**
 0. (Phase 0, если CI толстый) `chore(ci): thin to typecheck+test` — **только** workflow, до любых code fixes
 1. fix critical Bugbot / security → commit
-2. fix typecheck → commit
-3. fix lint → commit
-4. fix i18n → commit
-5. fix tests → commit
-6. fix react-doctor errors → commit (по одной rule/fix)
-7. update baseline → `chore(react-doctor): bump baseline score X → Y`
-8. fix build / bundle-budget → commit (Phase 3)
-9. supabase migrations/functions → отдельный commit (Phase 3.5)
+2. (только после явного «чини») refactor ponytail findings → commit(s) `refactor(simplify): …`
+3. fix typecheck → commit
+4. fix lint → commit
+5. fix i18n → commit
+6. fix tests → commit
+7. fix react-doctor errors → commit (по одной rule/fix)
+8. update baseline → `chore(react-doctor): bump baseline score X → Y`
+9. fix build / bundle-budget → commit (Phase 3)
+10. supabase migrations/functions → отдельный commit (Phase 3.5)
 
 Перед Phase 4: `git log --oneline main..HEAD` → Таблица 4.
 
@@ -413,6 +435,7 @@ vercel inspect <prod-deployment-url>
 |----------|-------|-------|--------|-----------------|----------------------|
 | Bugbot | 1 | нет | — | `review-bugbot` | ✅ |
 | Security | 1 | нет | — | `review-security` | ✅ |
+| Ponytail | 1 | нет | — | `ponytail-review` (external) | ✅ |
 | Typecheck | 1 + 5 | да | `typecheck` | `pnpm typecheck` | ✅ / ❌ блокер |
 | … | … | … | … | … | … |
 | Supabase | 3.5 | — | — | MCP / skip | ✅ |
@@ -438,6 +461,7 @@ vercel inspect <prod-deployment-url>
 | CI шаблон | thin / **too-thick (блокер)** / none |
 | Vercel Production (main) | READY / ERROR / skip |
 | Smoke | HTTP+runtime / +browser / partial |
+| Ponytail net | `Lean` / `-N` (блокер safe если ≤ -80) |
 
 ### Таблица 2 — Phase 1–3.5 (локальные проверки)
 
@@ -445,6 +469,7 @@ vercel inspect <prod-deployment-url>
 |-----|-------|-----------------|-----------|----------|-----------|-------|
 | Bugbot | 1 | `review-bugbot` | ✅ / ❌ | N | N | N |
 | Security | 1 | `review-security` | ✅ / ❌ | N | N | N |
+| Ponytail | 1 | `ponytail-review` | ✅ / ❌ / ⏸ | — | net≤-80 (safe) | findings |
 | Typecheck | 1 | `…` | ✅ / ❌ / skip | — | — | — |
 | Lint | 1 | `…` | ✅ / ❌ / skip | — | — | — |
 | i18n | 1 | `…` | ✅ / ❌ / skip | — | — | — |
@@ -454,6 +479,15 @@ vercel inspect <prod-deployment-url>
 | Bundle budget | 3 | `…` / `performance-optimizer` | ✅ / ❌ / skip | — | — | — |
 | Supabase | 3.5 | MCP / skip | ✅ / ❌ / skip | — | — | — |
 | Loop итераций | — | — | N из 5 | — | — | — |
+
+### Таблица 2b — Ponytail (если были находки)
+
+| # | Finding (формат skill) | net вклад |
+|---|------------------------|-----------|
+| 1 | `file:L12: delete: …` | … |
+
+Итог: `net: -N` или `Lean already. Ship.`  
+Порог блокера (safe): `net ≤ -80`.
 
 ### Таблица 3 — Phase 2 (React Doctor)
 
@@ -498,6 +532,8 @@ vercel inspect <prod-deployment-url>
 ## Стоп-условия (не мержить / не считать успехом)
 
 - Critical из Bugbot / security не закрыт (safe = стоп; auto = чинить до лимита)
+- Ponytail `net ≤ -80` в **safe** не закрыт решением пользователя (в **auto** — не стоп, только отчёт)
+- Внешний skill `ponytail-review` отсутствует на диске (нужен `install-external-skills.sh`)
 - typecheck / lint / i18n / test fail (Phase 1)
 - React Doctor errors > 0 или score < baseline + 1 (Phase 2)
 - build / bundle-budget fail (Phase 3) — **push запрещён**
@@ -514,9 +550,10 @@ vercel inspect <prod-deployment-url>
 | Когда | Что использовать |
 |-------|------------------|
 | Любой ✅ в отчёте | `verification-before-completion` |
-| Phase 1 review | **`review-bugbot`** (всегда) |
-| Phase 1 security | **`review-security`** (всегда); плюс `/security` при auth/PII |
-| Phase 1–5 фиксы (auto) | `systematic-debugging` до патча |
+| Phase 1 review | **`review-bugbot`** (всегда; Cursor-native) |
+| Phase 1 security | **`review-security`** (всегда; Cursor-native); плюс `/security` при auth/PII |
+| Phase 1 простота | **`ponytail-review`** (всегда; external — читать с диска, см. `registry/external-skills.md`); **не автофикс** |
+| Phase 1–5 фиксы (auto) | `systematic-debugging` до патча (**кроме** ponytail) |
 | Phase 2 | **`react-doctor`** |
 | Phase 3 bundle fail | **`performance-optimizer`** (Vercel) |
 | Phase 3.5 | **Supabase MCP** (`list_migrations`, advisors, edge deploy по политике) |
