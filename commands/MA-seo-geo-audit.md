@@ -79,6 +79,24 @@ argument-hint: "<URL или домен> [local|prod|full|page|tech|structure|aut
 
 Если пользователь вызывает старое имя `/MA-seo-audit` — скажи, что команда заменена на `/MA-seo-geo-audit`, и продолжай по этому ритуалу.
 
+## Волны (параллель)
+
+После Шага 0 гоняй треки **волнами**, не длинной цепочкой. Полная схема:  
+`$MA_HUB_ROOT/skills/seo-geo-audit/references/parallel-waves.md` (кэш: `~/.cursor/skills/seo-geo-audit/references/parallel-waves.md`).
+
+| Волна | Что | Параллель? |
+|-------|-----|------------|
+| **0** | Среда + URL + важные страницы | Нет — стоп, пока нет ответа |
+| **1** | Сайт: техника ‖ разметка ‖ on-page ‖ структура ‖ доверие домена (**только prod**). Рынок: SERP | Да — одним пакетом агентов |
+| **1b** | Качество контента ‖ GEO (одна главная/денежная страница) | Да — можно вместе с волной 1 |
+| **2** | Конкуренты (2–3) | После SERP, если вы их не назвали; в `quick`/`page` — только по запросу |
+| **3** | Один отчёт: дедуп → приоритеты → шаблон | Нет — только оркестратор |
+
+**Политика:** смотрим параллельно; правки сайта — только после «чини» / выбора пунктов, и **по очереди**.  
+**Fallback:** если параллельные агенты недоступны — те же треки по порядку из skill (A→I).
+
+Узкие режимы (`quick`, `page`, `tech`, …) — см. таблицу «Waves by mode» в `parallel-waves.md`.
+
 ## Обязательно: skill `seo-geo-audit`
 
 1. Прочитай и следуй skill **`seo-geo-audit`**: сначала `$MA_HUB_ROOT/skills/seo-geo-audit/SKILL.md`, иначе кэш `~/.cursor/skills/seo-geo-audit/SKILL.md`.
@@ -96,8 +114,8 @@ argument-hint: "<URL или домен> [local|prod|full|page|tech|structure|aut
 
 Чеклист для редакторов (да/нет): `seo-geo-audit/references/geo-content-checklist.md`.
 
-Шаблоны режимов, приоритетов и отчёта:  
-`seo-geo-audit/references/modes.md`, `prioritization.md`, `report-template.md`.
+Шаблоны режимов, волн, приоритетов и отчёта:  
+`seo-geo-audit/references/modes.md`, `parallel-waves.md`, `prioritization.md`, `report-template.md`.
 
 ## Жёсткие правила
 

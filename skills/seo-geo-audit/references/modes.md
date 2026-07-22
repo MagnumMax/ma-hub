@@ -2,6 +2,8 @@
 
 Environment (`local` | `prod`) is resolved **before** mode. See skill Step 0.
 
+Parallel **wave** schedule (what runs together vs waits): [parallel-waves.md](parallel-waves.md). Lists below are track membership by mode; waves define concurrency.
+
 - **local** → default mode `pre-deploy`
 - **prod** → default mode `full` (or `post-deploy` when re-checking live after release)
 
