@@ -22,6 +22,7 @@ echo "Wrote ${CONFIG_FILE}"
 
 chmod +x "${ROOT}/bootstrap/"*.sh
 "${ROOT}/bootstrap/install-commands.sh"
+"${ROOT}/bootstrap/install-skills.sh"
 
 # Convenience symlinks in ~/bin if present or creatable
 BIN_DIR="${HOME}/bin"
@@ -29,19 +30,25 @@ mkdir -p "$BIN_DIR"
 ln -sfn "${ROOT}/bootstrap/pull.sh" "${BIN_DIR}/ma-hub-pull"
 ln -sfn "${ROOT}/bootstrap/bootstrap.sh" "${BIN_DIR}/ma-hub-bootstrap"
 ln -sfn "${ROOT}/bootstrap/install-commands.sh" "${BIN_DIR}/ma-hub-install-commands"
-echo "Symlinks: ma-hub-pull, ma-hub-bootstrap, ma-hub-install-commands → ${BIN_DIR}"
+ln -sfn "${ROOT}/bootstrap/install-skills.sh" "${BIN_DIR}/ma-hub-install-skills"
+ln -sfn "${ROOT}/bootstrap/check-local-drift.sh" "${BIN_DIR}/ma-hub-check-drift"
+echo "Symlinks: ma-hub-pull, ma-hub-bootstrap, ma-hub-install-commands, ma-hub-install-skills, ma-hub-check-drift → ${BIN_DIR}"
 
 echo
 echo "=== User Rules (Cursor Settings) ==="
 echo "Восстановите личные правила из файла:"
 echo "  ${ROOT}/docs/user-rules.md"
-echo "Cursor → Settings → Rules → добавьте 3 правила из этого файла."
-echo "Без них тон диалога (русский, уточнения, «Следующие задачи») не восстановится автоматически."
+echo "Cursor → Settings → Rules → добавьте 4 правила из этого файла."
+echo "Без них тон диалога и закон «истина в ma-hub» не восстановится автоматически."
 echo
-echo "=== Skills (отдельно) ==="
-echo "Weekly: ~/bin/update-cursor-weekly.sh"
-echo "Или вручную: ~/bin/update-skills.sh"
+echo "=== Skills ==="
+echo "MA-owned: уже установлены из ${ROOT}/skills/"
+echo "Сторонние (Aaron, Vercel…): weekly ~/bin/update-cursor-weekly.sh или ~/bin/update-skills.sh"
+echo
+echo "=== Drift check ==="
+echo "Проверка кэша: ${ROOT}/bootstrap/check-local-drift.sh  (или ma-hub-check-drift)"
 echo
 echo "=== Готово ==="
 echo "В чате Cursor: /MA-help"
 echo "Стандарты: ${ROOT}/standards/ (VERSION=$(cat "${ROOT}/standards/VERSION"))"
+echo "Hub maintenance: ${ROOT}/docs/hub-maintenance.md"

@@ -36,5 +36,7 @@ if [[ -n "${MA_HUB_REF:-}" ]]; then
 fi
 
 "${HUB}/bootstrap/install-commands.sh"
+"${HUB}/bootstrap/install-skills.sh"
 
 echo "OK: hub updated · standards VERSION=$(cat "${HUB}/standards/VERSION" 2>/dev/null || echo '?')"
+echo "Tip: ma-hub-check-drift — убедиться, что локальный кэш = хаб"

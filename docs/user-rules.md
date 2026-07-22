@@ -2,7 +2,7 @@
 
 Эти правила живут в **Cursor → Settings → Rules** (глобально, не в репозитории проекта).
 
-После `bootstrap` на новом Mac **добавьте вручную** три правила ниже (скопируйте title + content).
+После `bootstrap` на новом Mac **добавьте вручную** четыре правила ниже (скопируйте title + content).
 
 Почему не автоматически: Cursor хранит rules в облаке/приложении; публичный git не должен подменять секреты аккаунта. Этот файл — страховка от потери диска.
 
@@ -40,6 +40,18 @@
 
 ```
 - Думай на том языке, на котором эффективнее (обычно English). Всегда отвечай на русском. Пиши понятными терминами.
+```
+
+---
+
+## 4. Monster Automation — источник правды в ma-hub
+
+```
+- Команды /MA-*, MA-owned skills и стандарты живут только в репозитории ma-hub (обычно ~/ma-hub: папки commands/, skills/, standards/). Локальные ~/.cursor/commands и ~/.cursor/skills — кэш после bootstrap/pull, не место для правок «только на этом ноутбуке».
+
+- Если меняешь любую MA-команду, MA-skill, стандарт или этот бэкап user-rules: править файлы в ma-hub → прогнать bootstrap/install-commands.sh и bootstrap/install-skills.sh → bootstrap/check-local-drift.sh → commit и push ma-hub (если пользователь не просил commit — явно сказать, что без push другие проекты не увидят изменения).
+
+- Запрещено оставлять новую /MA-* или MA-skill только в ~/.cursor/. Подробности: docs/hub-maintenance.md в ma-hub.
 ```
 
 ---
