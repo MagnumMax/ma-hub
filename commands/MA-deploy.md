@@ -39,7 +39,8 @@ argument-hint: [auto | check-only | skip-merge]
 
 ```
 /MA-deploy
-├── Phase 1    ← Локально: Bugbot + security + ponytail-review, typecheck, lint, i18n, tests
+├── Phase 0    ← План проекта + тонкий CI
+├── Phase 1    ← Волны: ревью ‖ проверки → потом фиксы по очереди
 ├── Phase 2    ← react-doctor (только локально)
 ├── Phase 3    ← build (≈ Vercel) + bundle-budget — финальный gate перед push
 ├── Phase 3.5  ← Supabase gate (миграции / edge) если есть в diff
@@ -57,7 +58,7 @@ argument-hint: [auto | check-only | skip-merge]
 
 | Фаза | Что делает | Где |
 |------|------------|-----|
-| 1 | Bugbot + security + ponytail-review, typecheck, lint, i18n, tests | локально |
+| 1 | Волны: Bugbot ‖ security ‖ ponytail; typecheck ‖ lint ‖ i18n ‖ tests; фиксы по очереди | локально |
 | 2 | react-doctor | локально |
 | 3 | build (≈ Vercel) + bundle-budget | локально, **перед push** |
 | 3.5 | Supabase: миграции / edge (если есть в diff) | локально / Supabase MCP |
@@ -101,6 +102,9 @@ argument-hint: [auto | check-only | skip-merge]
 ## Жёсткие правила (без исключений)
 
 **Ветки:** всегда только `dev` → PR → `main`. Никаких push напрямую в main, feature → main, master вместо dev. Если ветки `dev` нет — создай от `main` перед Phase 4.
+
+**Атомарные commits до релиза (главный смысл):** `/MA-deploy` выпускает **уже сделанную** работу. Сначала эта работа должна лежать в истории **атомарными** commits (одна причина = один commit). Ревью, проверки и выкладка идут **по этой** истории — не по грязному дереву и не по одному комку «вся фича».  
+Фиксы, найденные *внутри* deploy (Critical, lint, …) — тоже атомарно, но это **вторично**; главное — разобрать **предыдущие** изменения до Phase 1.
 
 **React Doctor:** следуй skill `react-doctor`. Команда всегда:
 ```bash
@@ -167,93 +171,135 @@ Baseline: `.react-doctor/baseline.json`. Если файла нет — созд
 
 6. Зафиксируй стартовое состояние: текущая ветка, uncommitted changes, последний CI status на `dev`, `CI_JOBS_TO_WAIT`, `HAS_SUPABASE`, список smoke URL.
 
-**Gate Phase 0:** таблица «План проекта» заполнена **и** CI = тонкий шаблон (или workflow отсутствует) → можно Phase 1. Иначе — стоп на блокере CI.
+7. **Атомарные commits предыдущей работы (gate до Phase 1)** — см. раздел ниже.  
+   Пока работа «до деплоя» не разложена по атомарным commits (или нет явного «продолжай как есть» от пользователя) — **не** стартуй волну 1A/1B.
 
-## Phase 1 — Локальные проверки
+**Gate Phase 0:** таблица «План проекта» заполнена **и** CI = тонкий шаблон (или workflow отсутствует) **и** история предыдущей работы = атомарные commits (или явное исключение от пользователя) → можно Phase 1. Иначе — стоп на блокере CI / истории.
+
+## Phase 1 — Локальные проверки (волны)
 
 **Правило:** не переходи к Phase 2, пока не закрыты все Critical / fails. Команды — из **«План проекта»**. Перед каждым ✅ — skill `verification-before-completion`.
 
-Порядок:
+**Политика параллели:** **смотрим вместе, чиним по очереди.**  
+Волны 1A / 1B — только read-only проверки по **уже атомарной** истории (`branch changes`).  
+Фиксы *из* Phase 1 (auto / «чини») — последовательно и атомарно (вторично к правилу «сначала история работы»). Не чинить параллельными агентами.
 
-1. **Code review — всегда Bugbot (read-only)**
-   - Прочитай и **следуй skill `review-bugbot`**: один subagent `bugbot`, `Diff: branch changes` (vs base/`main`), если есть только грязное дерево без коммитов — `uncommitted changes`
-   - Critical из Bugbot = блокер деплоя; Important/Minor = только в отчёт
-   - **safe:** Critical → Таблица 6 + стоп. **Не** править код
-   - **auto:** Critical → `systematic-debugging` → минимальный fix → атомарный commit
+| Волна | Что | Параллель? |
+|-------|-----|------------|
+| **1A — Ревью** | Bugbot ‖ Security ‖ Ponytail | Да — **одним** ходом родителя (три независимых агента / skill) |
+| **1B — Проверки** | typecheck ‖ lint ‖ i18n ‖ tests | Да — параллельные shell/команды из «План проекта» (пропуск = нет script) |
+| **1C — Сводка** | смержить Critical / fails / ponytail `net` в таблицы | Нет |
+| **Фиксы** | только после 1C; safe = стоп; auto = loop по одному | Нет — никогда параллельно |
 
-2. **Security review — всегда (read-only)**
-   - Прочитай и **следуй skill `review-security`**: один subagent `security-review`, тот же Diff scope
-   - Если в проекте/diff есть **auth / PII / платежи / роли** — дополнительно прогони логику команды `/security` (глубокий API/IDOR pass) и смержи Critical в одну Таблицу 6
-   - Critical = блокер; **safe** стоп / **auto** fix+commit
+**Fallback:** если нельзя запустить несколько агентов сразу — тот же состав 1A→1B по очереди (Bugbot → Security → Ponytail → проверки).
 
-3. **Ponytail review — всегда (read-only, внешний skill)**
-   - **Не копировать** текст skill в отчёт/команду. Источник: `registry/external-skills.md` → пакет `dietrichgebert/ponytail`
-   - Разреши путь (первый найденный):
-     1. `~/.agents/skills/ponytail-review/SKILL.md`
-     2. `~/.cursor/skills/ponytail-review/SKILL.md`
-     3. `~/.claude/skills/ponytail-review/SKILL.md`
-   - **Прочитай** актуальный `SKILL.md` и следуй ему целиком (формат находок, теги, `net: -N`)
-   - Scope как у Bugbot: `branch changes` vs `main`; если только грязное дерево без коммитов — uncommitted changes
-   - Если `SKILL.md` не найден → блокер: «внешний skill `ponytail-review` не установлен» → Таблица 6: запустить `$MA_HUB_ROOT/bootstrap/install-external-skills.sh` (или weekly). **Не** подставлять замороженную копию из памяти
-   - Запиши в отчёт: список находок (одна строка на finding по формату skill) + итоговый `net: -N` (или `Lean already. Ship.`)
-   - **Политика (не автофикс):**
-     - Находки **никогда** не применяются автоматически (ни safe, ни auto) — только отчёт
-     - Если `Lean already. Ship.` или `net` отсутствует / `net: 0` / `net` > -80 (например `-20`) → ✅ только отчёт, не блокер
-     - Если `net ≤ -80` (например `-80`, `-120`):
-       - **safe:** блокер → Таблица 6 + стоп; ждать «чини» / «не чинить» / «продолжай» / «отложить»
-       - **auto:** **не чинить**, пометить в Таблице 1 (`Ponytail net`) и Таблице 2, **продолжить** pipeline
-   - Чинить ponytail только после явного «чини» / выбора пунктов (атомарный commit `refactor(simplify): …` на пункт или группу)
+Можно стартовать **1A и 1B в одном ходу** (ревью не зависят от зелёных тестов). Если harness ограничивает — сначала 1A, затем 1B.
 
-4. **Typecheck** — обязательно локально (если есть script или CI job `typecheck`)
+### Волна 1A — Ревью (read-only, параллельно)
+
+Запусти **в одном сообщении / одном батче**:
+
+1. **Bugbot** — skill `review-bugbot`: один subagent `bugbot`, `Diff: branch changes` (vs base/`main`)
+   - К Phase 1 грязное дерево уже должно быть разложено в атомарные commits (Phase 0 §7). **Не** предпочитать `uncommitted changes` как нормальный путь — это обход gate истории
+   - Critical = блокер; Important/Minor = только отчёт
+2. **Security** — skill `review-security`: один subagent `security-review`, тот же Diff scope (`branch changes`)
+   - Если в проекте/diff есть **auth / PII / платежи / роли** — дополнительно логика `/security` (API/IDOR); Critical смержить в Таблицу 6
+3. **Ponytail** — внешний skill `ponytail-review` (не копировать текст skill). Источник: `registry/external-skills.md` → пакет `dietrichgebert/ponytail`
+   - Путь (первый найденный): `~/.agents/skills/ponytail-review/SKILL.md` → `~/.cursor/skills/…` → `~/.claude/skills/…`
+   - **Прочитай** `SKILL.md` с диска; scope = **branch changes** (как Bugbot)
+   - Нет файла → блокер: `install-external-skills.sh` (Таблица 6). Не подставлять копию из памяти
+   - В отчёт: findings + `net: -N` (или `Lean already. Ship.`)
+   - **Никогда** не автофиксить (safe и auto). `net ≤ -80`: **safe** → стоп; **auto** → пометить, **продолжить**. Чинить только после явного «чини»
+
+Дождись **всех трёх** до волны 1C (или до фиксов).
+
+### Волна 1B — Проверки (read-only / команды, параллельно)
+
+Из «План проекта», что есть — **параллельно**:
+
+4. **Typecheck** — обязательно, если есть script или CI job `typecheck`
    - Next.js с typegen: `npx next typegen && pnpm typecheck`
-   - иначе: команда из «План проекта»
-   - fail → **safe:** стоп; **auto:** `systematic-debugging` → fix + commit
+   - иначе команда из плана
+5. **Lint** — обычно только локально
+6. **i18n** — только локально; типично `i18n:check`, `i18n:cyrillic`, `i18n:parity`, `i18n:ui`; нет scripts → skip
+7. **Tests** — обязательно локально; дубль в Phase 5, если есть CI job `test`
 
-5. **Lint** — из «План проекта». Обычно **только локально** (Phase 1).
-   - fail → safe стоп / auto fix+commit
-
-6. **i18n** — из «План проекта», если scripts есть. **Только локально**:
-   - типично: `i18n:check`, `i18n:cyrillic`, `i18n:parity`, `i18n:ui`
-   - Пропусти если scripts нет
-   - fail → safe стоп / auto fix+commit
-
-7. **Tests** — из «План проекта». Обязательно локально; если есть CI job `test` — дублируется в Phase 5
-   - fail → safe стоп / auto fix+commit
+Fail любого шага → **safe:** стоп; **auto:** после 1C — sequential fix (не чинить, пока ревью/остальные проверки ещё бегут).
 
 **Build здесь не запускаем** — он в Phase 3.
 
-**Loop (только auto):** Critical/fail → root cause (`systematic-debugging`) → минимальный diff → **атомарный commit** → повтори упавшие шаги. Максимум 5 итераций.
+### Волна 1C — Сводка Phase 1
+
+Собери Таблицы 1–2 / 6: Critical Bugbot+Security, fails 1B, ponytail `net`.  
+**Safe:** любой блокер → стоп, ждать решения.  
+**Auto:** переходи к loop фиксов ниже (по одному).
+
+**Loop (только auto):** Critical/fail → root cause (`systematic-debugging`) → минимальный diff → **атомарный commit** → повтори **упавшие** шаги (можно снова параллельно перепроверить 1B после пакета фиксов). Максимум 5 итераций.
 
 **Safe:** loop запрещён. Любой блокер → стоп до ответа пользователя.
 
-### Атомарные коммиты (только когда есть право чинить)
+### Атомарные commits предыдущей работы (до Phase 1) — главный gate
 
-В **safe** без явного «чини» — **не создавай** commits с фиксами.
+**Смысл:** пользователь (и агент) сначала делают фичу/правки. Потом `/MA-deploy` **выпускает** эту работу. История `main..HEAD` должна быть набором **атомарных** commits — по ним идут Bugbot / security / ponytail / PR.  
+Это **не** про «как дробить фиксы внутри деплоя» в первую очередь. Внутри деплоя атомарность тоже сохраняем (см. ниже), но сначала — разобрать **всё, что было до**.
 
-В **auto** (или после «чини»): после **каждого** логически завершённого исправления — отдельный commit. Никогда не копи всё в один «deploy fix».
+**До волны 1A проверь:**
 
-**Правила:**
+1. `git status` — есть ли незакоммиченные изменения?
+2. `git log --oneline main..HEAD` (или merge-base с `main`) — как выглядит история работы?
+
+| Состояние | Вердикт | Действие |
+|-----------|---------|----------|
+| Чистое дерево + история из понятных атомарных commits (одна причина каждый) | ✅ | Phase 1 по `branch changes` |
+| Есть грязное дерево (unstaged/staged), внутри **несколько** причин | ❌ блокер истории | **Сначала** разложить в **несколько** атомарных commits. Потом Phase 1. **Запрещено** один commit «все изменения перед деплоем» |
+| Грязное дерево, **одна** узкая причина | ✅ после commit | Один атомарный commit → Phase 1 |
+| На ветке один (или мало) огромных commit(ов) «вся фича / WIP / sync» при ещё **не** запушенной истории | ❌ блокер истории | Предложи план разбиения → разбей на атомарные **до** Phase 1 (без force-push на чужие ветки) |
+| Огромный commit(ы) **уже на remote** | ⏸ спросить | Не переписывать remote без явной просьбы. Варианты: (а) «продолжай как есть» → Phase 1; (б) «разбей» → согласованный rewrite + force-with-lease только после «да» |
+
+**Как раскладывать грязное дерево / локальную историю (safe vs auto):**
+- **safe:** покажи план commits (список «commit 1: … / commit 2: …») → **стоп**, жди «ок» / правок → только потом создавай commits → Phase 1
+- **auto:** сам разложи по причинам (одна причина = один commit, осмысленные messages) → затем Phase 1 без паузы
+- Не используй интерактивный `git rebase -i` / `git add -i` (нет TTY). Для локальной непушеной истории: новые атомарные commits + при необходимости reset мягкий только на **своих** непушеных commits после явного плана; для уже запушенного — см. таблицу выше
+
+**Запрещено перед Phase 1:**
+- `git commit -a` / один commit всего diff «чтобы скорее деплоить»
+- Начать Bugbot/security/ponytail по `uncommitted changes`, пока gate истории не закрыт
+- Считать параллельные волны 1A/1B заменой нормальной истории commits
+
+**Таблица 4** после gate: `git log --oneline main..HEAD` — это и есть «по каким атомарным commits идёт выкладка».
+
+### Атомарные commits *во время* deploy (вторично)
+
+Только когда есть право чинить (auto или явное «чини»): каждый логический фикс из Phase 1–3.5 — **отдельный** commit. Не сваливать все Critical/lint/tests в один «deploy fix».
+
+В **safe** без «чини» — **не** создавай commits с фиксами деплоя.
+
+**Запрещено (фиксы внутри pipeline):**
+- Один большой commit на всю Phase 1 / весь deploy
+- Смешивать Bugbot + security + lint + tests в одном commit
+- Копить несвязанные фиксы после волны 1C в один commit
+
+**Обязательно (фиксы внутри pipeline):**
 - Один commit = одна причина
-- Commit только когда шаг локально зелёный
+- Commit когда этот шаг локально зелёный
 - Сообщение: `<type>(<scope>): <что и зачем>` — `fix`, `refactor`, `test`, `chore`, `perf`, `a11y`
-- Не смешивай unrelated files
 - `.react-doctor/baseline.json` — отдельный commit после Phase 2
-- config / CI / deploy command — отдельно от code fixes
+- config / CI / workflow — отдельно от code fixes
 
-**Порядок коммитов в loop:**
-0. (Phase 0, если CI толстый) `chore(ci): thin to typecheck+test` — **только** workflow, до любых code fixes
-1. fix critical Bugbot / security → commit
-2. (только после явного «чини») refactor ponytail findings → commit(s) `refactor(simplify): …`
+**Порядок commits для фиксов *внутри* loop:**
+0. (Phase 0, если CI толстый) `chore(ci): thin to typecheck+test` — **только** workflow, до code fixes
+1. fix critical Bugbot / security → отдельный commit на каждую причину
+2. (только после явного «чини») refactor ponytail → `refactor(simplify): …`
 3. fix typecheck → commit
 4. fix lint → commit
 5. fix i18n → commit
 6. fix tests → commit
-7. fix react-doctor errors → commit (по одной rule/fix)
+7. fix react-doctor → commit (по одной rule/fix)
 8. update baseline → `chore(react-doctor): bump baseline score X → Y`
 9. fix build / bundle-budget → commit (Phase 3)
 10. supabase migrations/functions → отдельный commit (Phase 3.5)
 
-Перед Phase 4: `git log --oneline main..HEAD` → Таблица 4.
+Перед Phase 4 снова: `git log --oneline main..HEAD` → Таблица 4 (предыдущая работа + атомарные фиксы деплоя).
 
 ## Phase 2 — React Doctor (loop + минимум +1 к score)
 
@@ -497,12 +543,14 @@ vercel inspect <prod-deployment-url>
 | Errors | — | 0 | 0 | ✅ / ❌ |
 | Warnings | — | N | — | info |
 
-### Таблица 4 — Атомарные commits
+### Таблица 4 — Атомарные commits (сначала работа до деплоя, потом фиксы pipeline)
 
-| # | SHA | Сообщение | Phase |
+Сюда входят commits **предыдущей** работы (`main..HEAD` на входе в Phase 1) **и** любые атомарные фиксы, сделанные уже в `/MA-deploy`.
+
+| # | SHA | Сообщение | Когда |
 |---|-----|-----------|-------|
-| 1 | `abc1234` | fix(auth): … | 1 |
-| 2 | `def5678` | chore(react-doctor): bump baseline 97 → 98 | 2 |
+| 1 | `abc1234` | feat(…): … | до деплоя |
+| 2 | `def5678` | fix(auth): … | Phase 1 (fix из ревью) |
 
 ### Таблица 5 — Phase 4–7 (deploy)
 
@@ -531,6 +579,7 @@ vercel inspect <prod-deployment-url>
 
 ## Стоп-условия (не мержить / не считать успехом)
 
+- **История до деплоя не атомарна** (грязное дерево с несколькими причинами / один комок «вся фича» без разбиения) — стоп до раскладки commits или явного «продолжай как есть»
 - Critical из Bugbot / security не закрыт (safe = стоп; auto = чинить до лимита)
 - Ponytail `net ≤ -80` в **safe** не закрыт решением пользователя (в **auto** — не стоп, только отчёт)
 - Внешний skill `ponytail-review` отсутствует на диске (нужен `install-external-skills.sh`)
@@ -550,9 +599,10 @@ vercel inspect <prod-deployment-url>
 | Когда | Что использовать |
 |-------|------------------|
 | Любой ✅ в отчёте | `verification-before-completion` |
-| Phase 1 review | **`review-bugbot`** (всегда; Cursor-native) |
-| Phase 1 security | **`review-security`** (всегда; Cursor-native); плюс `/security` при auth/PII |
-| Phase 1 простота | **`ponytail-review`** (всегда; external — читать с диска, см. `registry/external-skills.md`); **не автофикс** |
+| Phase 1 review | **`review-bugbot`** (всегда; Cursor-native; волна **1A** ‖ security ‖ ponytail) |
+| Phase 1 security | **`review-security`** (всегда; Cursor-native; волна **1A**); плюс `/security` при auth/PII |
+| Phase 1 простота | **`ponytail-review`** (всегда; external — читать с диска, см. `registry/external-skills.md`; волна **1A**); **не автофикс** |
+| Phase 1 проверки | typecheck ‖ lint ‖ i18n ‖ tests (волна **1B**); фиксы только после сводки, **по очереди** |
 | Phase 1–5 фиксы (auto) | `systematic-debugging` до патча (**кроме** ponytail) |
 | Phase 2 | **`react-doctor`** |
 | Phase 3 bundle fail | **`performance-optimizer`** (Vercel) |
