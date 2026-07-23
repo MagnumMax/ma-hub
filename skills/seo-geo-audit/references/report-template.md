@@ -9,6 +9,15 @@ Write the user-facing report in the user's language (default: Russian). Keep ski
 **Режим:** full | page | tech | pre-deploy | post-deploy | …
 **База:** <primary base> · **Прод-домен:** <if known and different; not fetched when local>
 
+### Статус процесса
+| Поле | Значение |
+|------|----------|
+| Сейчас | идёт процесс / нужно ваше решение / готово |
+| Что происходит | одна фраза простым языком |
+| Что от вас | ничего / ответить про среду·URL / «чини» · выбрать пункты |
+
+(Канон: `standards/00-operating-model.md` в ma-hub.)
+
 ## Краткий вывод
 - Состояние: <1 фраза — и поиск, и ответы ИИ>
 - Главные риски: <до 3>
