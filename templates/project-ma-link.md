@@ -24,3 +24,4 @@
 - **track main** — рекомендуется: daily `ma-hub-ensure-latest` (и weekly/`ma-hub-pull`) держит свежие стандарты и команды. Для Cloud Agent см. `templates/cloud-ma-setup.md`.
 - **pin** — только для критичных продуктов; перед revise осознанно обновить pin.
 - **без дублей** — не держать вторые копии стандартов MA в `docs/`, Cursor rules и т.п.; уникальное локальное — только здесь (раздел Local deviations).
+- **git-хуки** — универсальное правило для всех продуктов с `/MA-deploy`: см. `templates/git-hooks-ma-deploy.md` (лёгкий pre-commit, полный test не на каждый атомарный commit).
