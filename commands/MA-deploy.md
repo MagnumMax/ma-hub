@@ -107,6 +107,8 @@ argument-hint: [auto | check-only | skip-merge]
 
 **Ветки:** всегда только `dev` → PR → `main`. Никаких push напрямую в main, feature → main, master вместо dev. Если ветки `dev` нет — создай от `main` перед Phase 4.
 
+**Merge в main:** только обычный merge commit (`gh pr merge --merge`). Squash и rebase merge **запрещены** — иначе история `dev` и `main` расходится, и каждый следующий релиз снова ловит те же конфликты.
+
 **Атомарные commits — в конце локального цикла (удобство, без спроса):**  
 1. Phase 1–3.5 работают по **рабочему дереву** (грязное OK). Ревью — по незакоммиченному (и по ветке, если уже есть commits vs `main`).  
 2. Фиксы (auto / «чини») **копятся без commit** — иначе каждый блокер плодит лишнюю историю.  
@@ -401,6 +403,10 @@ gh run watch <run-id> --exit-status
 
 Пропусти merge если `skip-merge` или `check-only`.
 
+**Политика merge (жёстко):** только **обычный merge commit** (`gh pr merge --merge`). **Запрещено** `--squash` и `--rebase`.
+
+Почему: squash на `main` ломает общую историю с `dev`. Git потом видит «два разных изменения одних и тех же мест», и каждый следующий релиз снова просит разрулить те же файлы — даже если правки на `dev` уже были влиты. Обычный merge сохраняет связь веток: параллельная работа на `dev` во время релиза не «перетирается» искусственным выравниванием после squash.
+
 1. PR **dev → main**:
    ```bash
    gh pr list --head dev --base main --state open
@@ -411,9 +417,9 @@ gh run watch <run-id> --exit-status
    gh pr checks <number> --watch
    ```
 3. Если PR **застрял** (конфликты, висящие review-комменты, красный CI после merge main): следуй skill **`babysit`** (в рамках safe/auto: в safe — только диагноз в Таблицу 6; в auto — чинить и довести до merge-ready). Не используй babysit как замену всего Phase 6.
-4. Merge:
+4. Merge (**только** `--merge`, ветку `dev` не удалять):
    ```bash
-   gh pr merge <number> --squash --delete-branch=false
+   gh pr merge <number> --merge --delete-branch=false
    ```
 5. Запиши merge SHA на `main` → Phase 7.
 
@@ -586,7 +592,7 @@ vercel inspect <prod-deployment-url>
 | 4 Push dev | `git push origin dev` | ✅ / ❌ / skip | commit `<sha>` |
 | 5 CI dev | `CI_JOBS_TO_WAIT` (+ `ci-investigator` при fail) | ✅ / ❌ / skip | run URL |
 | 6 PR | dev → main | ✅ / ❌ / skip | PR URL |
-| 6 Merge | squash (+ `babysit` если застрял) | ✅ / ❌ / skip | merge SHA |
+| 6 Merge | merge commit, не squash (+ `babysit` если застрял) | ✅ / ❌ / skip | merge SHA |
 | 7 Vercel Production | main → READY | ✅ / ❌ / skip | prod URL |
 | 7 Smoke A | HTTP + runtime errors | ✅ / ❌ / skip | routes |
 | 7 Smoke B | `agent-browser` | ✅ / ❌ / ⚠️ fallback | URLs |
