@@ -23,17 +23,28 @@ echo "Wrote ${CONFIG_FILE}"
 chmod +x "${ROOT}/bootstrap/"*.sh
 "${ROOT}/bootstrap/install-commands.sh"
 "${ROOT}/bootstrap/install-skills.sh"
+# shellcheck source=stamp.sh
+source "${ROOT}/bootstrap/stamp.sh"
+ma_hub_write_stamp "$ROOT"
 
 # Convenience symlinks in ~/bin if present or creatable
 BIN_DIR="${HOME}/bin"
 mkdir -p "$BIN_DIR"
 ln -sfn "${ROOT}/bootstrap/pull.sh" "${BIN_DIR}/ma-hub-pull"
+ln -sfn "${ROOT}/bootstrap/ensure-latest.sh" "${BIN_DIR}/ma-hub-ensure-latest"
+ln -sfn "${ROOT}/bootstrap/cloud-ensure.sh" "${BIN_DIR}/ma-hub-cloud-ensure"
 ln -sfn "${ROOT}/bootstrap/bootstrap.sh" "${BIN_DIR}/ma-hub-bootstrap"
 ln -sfn "${ROOT}/bootstrap/install-commands.sh" "${BIN_DIR}/ma-hub-install-commands"
 ln -sfn "${ROOT}/bootstrap/install-skills.sh" "${BIN_DIR}/ma-hub-install-skills"
 ln -sfn "${ROOT}/bootstrap/install-external-skills.sh" "${BIN_DIR}/ma-hub-install-external-skills"
 ln -sfn "${ROOT}/bootstrap/check-local-drift.sh" "${BIN_DIR}/ma-hub-check-drift"
-echo "Symlinks: ma-hub-pull, ma-hub-bootstrap, ma-hub-install-commands, ma-hub-install-skills, ma-hub-install-external-skills, ma-hub-check-drift → ${BIN_DIR}"
+ln -sfn "${ROOT}/bootstrap/install-launch-agent.sh" "${BIN_DIR}/ma-hub-install-launch-agent"
+ln -sfn "${ROOT}/bootstrap/install-session-hook.sh" "${BIN_DIR}/ma-hub-install-session-hook"
+echo "Symlinks: ma-hub-pull, ma-hub-ensure-latest, ma-hub-cloud-ensure, ma-hub-bootstrap, … → ${BIN_DIR}"
+
+# Daily auto-sync + soft session refresh (macOS / local Cursor)
+"${ROOT}/bootstrap/install-launch-agent.sh" || echo "WARN: launch agent not installed"
+"${ROOT}/bootstrap/install-session-hook.sh" || echo "WARN: session hook not installed"
 
 echo
 echo "=== User Rules (Cursor Settings) ==="

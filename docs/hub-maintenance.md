@@ -28,9 +28,11 @@
    $MA_HUB_ROOT/bootstrap/install-skills.sh
    # при изменении registry или на новом Mac:
    $MA_HUB_ROOT/bootstrap/install-external-skills.sh
+   # или: ma-hub-ensure-latest
    ```
 6. Проверить: `$MA_HUB_ROOT/bootstrap/check-local-drift.sh`
-7. **Закоммитить и запушить ma-hub** (если пользователь просит commit — сделать; если нет — явно сказать: «изменения только в хабе, нужен commit+push, иначе другие проекты не увидят»)
+7. **Закоммитить и запушить ma-hub** (если пользователь просит commit — сделать; если нет — явно сказать: «изменения только в хабе, нужен commit+push, иначе другие проекты/облако не увидят»)
+8. На других Mac / в облаке обновление подхватится само: daily `ensure-latest`, session hook, или `cloud-ensure` при старте Cloud Agent (`templates/cloud-ma-setup.md`)
 
 Запрещено оставлять новую `/MA-*` или MA-skill **только** в `~/.cursor/` — после `ma-hub-pull` на другом Mac её не будет.
 Запрещено вендорить чужой `SKILL.md` в ma-hub «на всякий случай» — только манифест + `Read` с диска.

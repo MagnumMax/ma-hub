@@ -14,10 +14,20 @@ Semver для содержимого `standards/`:
 
 | Режим | Когда | Как |
 |-------|--------|-----|
-| **track main** (дефолт) | обычные продукты | `ma-hub-pull` / weekly; revise читает текущий `~/ma-hub` |
-| **pin tag** | критичный прод, не хотим сюрпризов | в `docs/MA-STANDARDS.md`: `Pin: v1.0.0`; pull с `MA_HUB_REF=v1.0.0` |
+| **track main** (дефолт) | обычные продукты | daily `ma-hub-ensure-latest` (+ weekly/force `ma-hub-pull`); revise читает текущий `~/ma-hub` |
+| **pin tag** | критичный прод, не хотим сюрпризов | в `docs/MA-STANDARDS.md`: `Pin: v1.0.0`; `MA_HUB_REF=v1.0.0 ma-hub-ensure-latest` |
 
 Проекты **не хранят копию** стандартов целиком — только ссылку и режим. Иначе копии устаревают.
+
+## Stamp автообновления
+
+Файл `~/.config/ma-hub/installed-state` после успешного install:
+
+- `GIT_SHA` — какой коммит хаба установлен в локальный кэш
+- `STANDARDS_VERSION` — значение `standards/VERSION` на тот момент
+- `UPDATED_AT` — время sync
+
+`ensure-latest` делает `git fetch` и обновляет кэш **только если** remote SHA или VERSION новее stamp (либо передан `--force`).
 
 ## Команды и MA-skills
 

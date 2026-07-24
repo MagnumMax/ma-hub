@@ -28,9 +28,12 @@
 
 ## Политика версий
 
-- По умолчанию: **всегда latest с `main`**
-- Weekly (и вручную `ma-hub-pull`) делает `git pull` и переустанавливает команды + MA-skills
-- Критичный продукт: в `docs/MA-STANDARDS.md` проекта укажите pin tag; перед revise можно `MA_HUB_REF=vX.Y.Z ma-hub-pull`
+- По умолчанию: **всегда latest** с текущей ветки хаба
+- **Ежедневно** `ensure-latest` подтягивает только если на `origin` новый git SHA или сменился `standards/VERSION`
+- При старте чата Cursor — мягкая проверка (если кэш старше суток)
+- Weekly / вручную `ma-hub-pull` = принудительный sync (`--force`)
+- Критичный продукт: pin tag в `docs/MA-STANDARDS.md`; `MA_HUB_REF=vX.Y.Z ma-hub-ensure-latest`
+- Облако: [`templates/cloud-ma-setup.md`](../templates/cloud-ma-setup.md) + `cloud-ensure.sh`
 
 ## Правки только в хабе
 
