@@ -23,10 +23,10 @@ argument-hint: [auto | check-only | skip-merge]
 | Режим | Как вызвать | Починка блокеров |
 |-------|-------------|------------------|
 | **safe** (по умолчанию) | `/MA-deploy`, `/MA-deploy check-only`, `/MA-deploy skip-merge` | **Не чинить самому.** Найти проблемы → таблица блокеров → **остановить и ждать** решения пользователя (чинить / не чинить / отложить) |
-| **auto** | `/MA-deploy auto` (можно комбинировать: `auto check-only`, `auto skip-merge`) | Чинить **всё**, что блокирует деплой (**толстый CI → thin template**, ревью Critical, typecheck, lint, i18n, tests, react-doctor, build, bundle-budget, supabase, CI fails) **без вопросов и без паузы** — для ночных/уверенных прогонов. **Исключение:** ponytail/упрощения — только отчёт, не чинить |
+| **auto** | `/MA-deploy auto` (можно комбинировать: `auto check-only`, `auto skip-merge`) | Чинить **всё**, что блокирует деплой (**толстый CI → thin template**, **тяжёлые git-хуки → шаблон хаба**, ревью Critical, typecheck, lint, i18n, tests, react-doctor, build, bundle-budget, supabase, CI fails) **без вопросов и без паузы** — для ночных/уверенных прогонов. **Исключение:** ponytail/упрощения — только отчёт, не чинить |
 
 **Правила safe (default):**
-- Любой Critical из code review / security, **толстый CI**, любой fail typecheck/lint/i18n/tests/doctor/build/bundle/supabase/CI → **стоп**, заполнить Таблицу 6, одна строка «жду решения», **не** править код, **не** commit, **не** push
+- Любой Critical из code review / security, **толстый CI**, **тяжёлые git-хуки**, любой fail typecheck/lint/i18n/tests/doctor/build/bundle/supabase/CI → **стоп**, заполнить Таблицу 6, одна строка «жду решения», **не** править код, **не** commit, **не** push
 - Грязное дерево в начале — **не** блокер и **не** повод коммитить. Идём в Phase 1 по рабочему дереву
 - Ponytail: `net ≤ -80` → **стоп** (Таблица 6); меньший объём — только отчёт. **Никогда** не применять упрощения без явного «чини»
 - Important/Minor — только в отчёт, не чинить
@@ -43,7 +43,7 @@ argument-hint: [auto | check-only | skip-merge]
 
 ```
 /MA-deploy
-├── Phase 0    ← План проекта + тонкий CI + аудит тяжёлых git-хуков
+├── Phase 0    ← План проекта + тонкий CI + **жёсткий gate git-хуков** (как CI)
 ├── Phase 1    ← Волны: ревью ‖ проверки → потом фиксы по очереди (копим в дереве)
 ├── Phase 2    ← react-doctor (только локально; фиксы без commit)
 ├── Phase 3    ← диск / .next → build (≈ Vercel) + bundle-budget
@@ -70,7 +70,7 @@ argument-hint: [auto | check-only | skip-merge]
 | Тяжёлый pre-push дважды (фича, потом снова после merge main) | Сначала **3.95** (main → dev), потом **один** push |
 | Конфликт обнаружен только на PR | **Запрещено.** Конфликты снимать в 3.95 **до** открытия PR |
 | Build упал на ENOSPC | Перед Phase 3 — чек места + безопасная очистка `.next` |
-| Слепой `--no-verify` | **Не** дефолт. Править стратегию хуков (см. `templates/git-hooks-ma-deploy.md`) |
+| Слепой `--no-verify` | **Не** дефолт. Править стратегию хуков в Phase 0 (как thin CI) по `templates/git-hooks-ma-deploy.md` |
 
 **Thin CI и локальный build не ослаблять:** CI = только `{typecheck, test}`; `pnpm build` перед push остаётся обязательным.
 
@@ -80,6 +80,7 @@ argument-hint: [auto | check-only | skip-merge]
 
 | Фаза | Что делает | Где |
 |------|------------|-----|
+| 0 | План + thin CI gate + **hooks gate** (лёгкий pre-commit) | локально |
 | 1 | Волны: Bugbot ‖ security ‖ ponytail; typecheck ‖ lint ‖ i18n ‖ tests; фиксы по очереди | локально |
 | 2 | react-doctor | локально |
 | 3 | диск / `.next` → build (≈ Vercel) + bundle-budget | локально |
@@ -135,7 +136,7 @@ argument-hint: [auto | check-only | skip-merge]
 3. Когда локально **нет блокеров** → Phase 3.9: агент **сам** раскладывает итоговое грязное дерево в атомарные commits (одна причина = один commit) → **3.95 sync main** → затем **один** push.  
 Не спрашивай «ок?» по коммитам. Не ставь грязное дерево в Таблицу 6. Не коммить «на всякий случай» в начале.
 
-**Хуки и полный test suite:** полный `pnpm test` / vitest — **один раз** в Phase 1 (плюс тонкий CI). На каждый атомарный commit Phase 3.9 полный suite **не** гонять. Стратегия хуков — `templates/git-hooks-ma-deploy.md`. `--no-verify` не использовать как обычный путь.
+**Хуки и полный test suite:** полный `pnpm test` / vitest — **один раз** в Phase 1 (плюс тонкий CI). На каждый атомарный commit Phase 3.9 полный suite **не** гонять. Тяжёлые хуки = **блокер Phase 0** (как толстый CI); эталон — `templates/git-hooks-ma-deploy.md`. `--no-verify` не использовать как обычный путь.
 
 **Main до PR:** Phase 3.95 обязателен: `origin/main` влит в `dev`, конфликты сняты **до** push и **до** открытия PR. Обнаружить конфликт только на PR = ошибка pipeline.
 
@@ -202,17 +203,39 @@ Baseline: `.react-doctor/baseline.json`. Если файла нет — созд
    git checkout -b dev && git push -u origin dev
    ```
 
-6. Зафиксируй стартовое состояние: текущая ветка, uncommitted changes (факт, не блокер), последний CI status на `dev`, `CI_JOBS_TO_WAIT`, `HAS_SUPABASE`, список smoke URL.
+6. Зафиксируй стартовое состояние: текущая ветка, uncommitted changes (факт, не блокер), последний CI status на `dev`, `CI_JOBS_TO_WAIT`, `HAS_SUPABASE`, `HOOKS_TEMPLATE`, список smoke URL.
 
-7. **Аудит git-хуков (скорость):** есть ли husky / lefthook / pre-commit / pre-push?
-   - Если **pre-commit** гоняет полный `pnpm test` / vitest / e2e → **риск повторов** в Phase 3.9. В отчёте Phase 0: «хуки тяжёлые».
-   - **auto:** поправь хуки в дереве по `templates/git-hooks-ma-deploy.md` (лёгкий pre-commit, полный test в pre-push или только в `/MA-deploy`+CI) — commit уйдёт в 3.9.
-   - **safe:** не чинить без «чини»; в Phase 3.9 всё равно не гонять полный suite на каждый commit (см. 3.9: `MA_ATOMIC_PACKING=1`).
-   - **Не** ставь «тяжёлые хуки» в Таблицу 6 как Critical сами по себе — это скорость, не качество. Но отметь в плане.
+7. **Сверка git-хуков (жёсткий gate — как thin CI):**
+
+   Прочитай фактические хуки проекта (что есть):
+   - `.husky/pre-commit`, `.husky/pre-push`
+   - `lefthook.yml` / `.lefthook*`
+   - `.pre-commit-config.yaml`
+   - связанные scripts в `package.json` (`prepare`, `precommit`, …)
+
+   Эталон: `$MA_HUB_ROOT/templates/git-hooks-ma-deploy.md`.
+
+   **Тяжёлый pre-commit** = запускает полный `pnpm test` / `npm test` / `vitest` (без узкого фильтра staged) / e2e / build **и** не уважает `MA_ATOMIC_PACKING=1` (нет раннего skip полного suite).
+
+   | Состояние хуков | Вердикт | Действие |
+   |-----------------|---------|----------|
+   | Нет хуков **или** pre-commit только быстрый (lint-staged / format / eslint staged) **или** полный suite пропускается при `MA_ATOMIC_PACKING=1` | ✅ лёгкий шаблон | `HOOKS_TEMPLATE=light` → дальше (если CI gate тоже ок) |
+   | Pre-commit гоняет полный suite **без** уважения к `MA_ATOMIC_PACKING=1` | ❌ **блокер** | **Стоп.** Не Phase 1, не push, не merge. Таблица 6: «git-хуки тяжёлые» |
+   | Pre-push гоняет полный suite **один раз** | ✅ ok | Это нормально (один раз на push после 3.95) |
+
+   **Закрытие блокера «git-хуки тяжёлые»** (единственный допустимый путь вперёд — зеркало «CI толще шаблона»):
+   - Приведи хуки к `$MA_HUB_ROOT/templates/git-hooks-ma-deploy.md`:
+     - pre-commit: только быстрое (lint-staged / format); полный test **убрать** из pre-commit
+     - обязательно: при `MA_ATOMIC_PACKING=1` полный suite в pre-commit **не** бежит
+     - полный `typecheck`/`test` — в pre-push (опционально) и/или в `/MA-deploy` Phase 1 + thin CI
+   - **safe:** стоп + Таблица 6, ждать «чини» / решения. **Не** править хуки без явного согласия
+   - **auto:** сразу поправь хуки **в рабочем дереве (без commit)** → `HOOKS_TEMPLATE=light` → Phase 1; commit хуков уйдёт в Phase 3.9 (`chore(hooks): …`)
+   - Пока блокер открыт — **запрещено** «поставить `--no-verify` и пойти дальше» как обычный путь
+   - Thin CI и локальный `pnpm build` **не** ослаблять при правке хуков
 
 8. **Не** раскладывай commits в Phase 0. Грязное дерево — нормальный вход. Упаковка = Phase 3.9 после зелёных 1–3.5.
 
-**Gate Phase 0:** таблица «План проекта» заполнена **и** CI = тонкий шаблон (или workflow отсутствует; или в auto уже поправлен в дереве) → Phase 1. Стоп только на реальных блокерах (толстый CI в safe и т.п.) — **не** на «нужны commits».
+**Gate Phase 0:** таблица «План проекта» заполнена **и** CI = тонкий шаблон **и** хуки = лёгкий шаблон (или workflow/хуки отсутствуют; или в auto уже поправлены в дереве) → Phase 1. Стоп только на реальных блокерах (толстый CI / тяжёлые хуки в safe и т.п.) — **не** на «нужны commits».
 
 ## Phase 1 — Локальные проверки (волны)
 
@@ -300,10 +323,11 @@ Fail любого шага → **safe:** стоп; **auto:** после 1C — s
 - Один большой commit всего diff в середине pipeline
 - Коммитить каждый фикс сразу (это как раз плодит историю до зелёного состояния)
 
-**Обязательно помнить для Phase 3.9** (когда всё зелёно): одна причина = один commit; сообщения `<type>(<scope>): …`; CI/workflow отдельно от code; baseline react-doctor отдельно; supabase migrations/functions отдельно.
+**Обязательно помнить для Phase 3.9** (когда всё зелёно): одна причина = один commit; сообщения `<type>(<scope>): …`; CI/workflow отдельно от code; hooks отдельно; baseline react-doctor отдельно; supabase migrations/functions отдельно.
 
 Ориентир порядка упаковки в 3.9 (если эти изменения есть в дереве):
 0. `chore(ci): thin to typecheck+test` — только workflow
+0b. `chore(hooks): light pre-commit + MA_ATOMIC_PACKING` — только git-хуки (из Phase 0)
 1. feat/fix предыдущей работы пользователя — по причинам
 2. fix critical Bugbot / security — по причинам
 3. (только после явного «чини») `refactor(simplify): …`
@@ -598,11 +622,12 @@ vercel inspect <prod-deployment-url>
 | Упаковка commits | 3.9 | нет | — | атомарно + `MA_ATOMIC_PACKING=1` | ✅ |
 | Sync main → dev | 3.95 | нет | — | `git merge origin/main` до PR | ✅ |
 | CI шаблон | 0 | — | только typecheck+test | thin template | ✅ / ❌ блокер |
+| Git-хуки | 0 | нет | — | light / `MA_ATOMIC_PACKING` | ✅ / ❌ блокер |
 
 `CI_JOBS_TO_WAIT`: `typecheck`, `test` (только эти)  
 `CI_TEMPLATE`: thin / **too-thick (блокер)** / none  
+`HOOKS_TEMPLATE`: light / **heavy (блокер)** / none  
 `HAS_SUPABASE`: yes/no  
-`HOOKS`: light / heavy→fix / heavy→risk  
 `DISK_BEFORE_BUILD`: OK / cleaned `.next` / blocker
 
 ### Таблица 1 — Сводка (простым языком)
@@ -626,11 +651,11 @@ vercel inspect <prod-deployment-url>
 | Merge в main | да / нет / ожидает |
 | База/функции | не нужно / нужно / сделано / блокер |
 | CI шаблон | тонкий / **толще нормы (блокер)** / нет CI |
+| Хуки | лёгкие / **тяжёлые (блокер)** / исправлены в Phase 0→3.9 |
 | Vercel на main | READY / ERROR / skip |
 | Smoke | HTTP+runtime / +browser / partial |
 | Простота (ponytail) | `Lean` / `-N` (в safe блокер если ≤ -80) |
 | Сейчас ждём | ничего / CI (~3–10 мин) / Vercel (~5–10 мин) / ваше решение |
-| Хуки | лёгкие / тяжёлые (исправлены в 3.9) / риск (safe, не чинили) |
 | main → dev до PR | сделано (3.95) / skip (check-only) / блокер |
 
 **Словарь «Этап работы»** (выбери одну фразу):
@@ -742,11 +767,11 @@ vercel inspect <prod-deployment-url>
 - Supabase: в diff есть миграции/functions, прод не готов, нет безопасного плана (Phase 3.5)
 - CI на dev красный (`CI_JOBS_TO_WAIT`)
 - **CI толще тонкого шаблона** (любой job кроме `typecheck` / `test`) — **стоп**, пока workflow не упрощён; нельзя «подождать и пойти дальше»
+- **Git-хуки тяжёлые** (полный test в pre-commit без `MA_ATOMIC_PACKING`) — **стоп**, пока хуки не приведены к шаблону хаба; нельзя «обойти `--no-verify` и пойти дальше»
 - PR conflicts или failing required checks (конфликт после 3.95 = чинить через 3.95, не «на глаз» в UI)
 - Push не в `dev` или PR не dev → main
 - **Vercel Production (main) не READY**
 - Секреты / `.env` / tokens в diff — **всегда стоп**, даже в `auto`
-- Полный test suite на каждый атомарный commit Phase 3.9 без попытки `MA_ATOMIC_PACKING` / правки хуков — анти-паттерн (в auto — исправить процесс; не считать «нормальной скоростью»)
 
 ## Skills / MCP для агента (обязательная маршрутизация)
 

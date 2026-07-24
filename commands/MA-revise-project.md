@@ -129,10 +129,10 @@ description: Сверить проект с ma-hub standards и подтянут
 Где проект **осознанно** другой (бренд, ниша) — не ломать, зафиксировать в `docs/MA-STANDARDS.md`.
 
 ### Git-хуки vs `/MA-deploy` (скорость релиза) — все проекты
-Сверить husky / lefthook / pre-commit с `$MA_HUB_ROOT/templates/git-hooks-ma-deploy.md` (**универсальное** требование хаба, не опция одного продукта):
-- pre-commit гоняет полный `pnpm test` / vitest? → пробел (при атомарной упаковке релиза будет N полных прогонов)
-- есть ли уважение к `MA_ATOMIC_PACKING=1`?
-- Действие: лёгкий pre-commit, полный suite в pre-push или только в `/MA-deploy` + thin CI. **Не** предлагать ослабить thin CI или убрать локальный build.
+Сверить husky / lefthook / pre-commit с `$MA_HUB_ROOT/templates/git-hooks-ma-deploy.md` (**жёсткий gate** в `/MA-deploy` Phase 0, зеркало thin CI):
+- pre-commit гоняет полный `pnpm test` / vitest без `MA_ATOMIC_PACKING=1`? → **блокер** (в auto чинит `/MA-deploy`, в safe ждёт «чини»)
+- Отдельный revise только ради хуков **не обязателен**, если следующий шаг — `/MA-deploy auto`
+- **Не** предлагать ослабить thin CI или убрать локальный build
 
 ### План подтягивания
 Пошагово, пакетами. Safe = пауза после каждого пакета. Auto = чекпоинты без лишних вопросов.  
