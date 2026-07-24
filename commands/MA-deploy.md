@@ -14,6 +14,8 @@ argument-hint: [auto | check-only | skip-merge]
 Перед релизом сверься с `$MA_HUB_ROOT/standards/05-release-and-quality.md`  
 и (если есть) `docs/MA-STANDARDS.md` в проекте.
 
+Правила анти-повторов, Phase 3.95, диск перед build и ETA в статусе — **универсальный закон для всех проектов** с `/MA-deploy`, не локальная настройка одного продукта.
+
 ## Режимы починки (важно)
 
 Сначала разбери `$ARGUMENTS` и зафиксируй режим:
@@ -41,19 +43,36 @@ argument-hint: [auto | check-only | skip-merge]
 
 ```
 /MA-deploy
-├── Phase 0    ← План проекта + тонкий CI (без commits из‑за грязного дерева)
+├── Phase 0    ← План проекта + тонкий CI + аудит тяжёлых git-хуков
 ├── Phase 1    ← Волны: ревью ‖ проверки → потом фиксы по очереди (копим в дереве)
 ├── Phase 2    ← react-doctor (только локально; фиксы без commit)
-├── Phase 3    ← build (≈ Vercel) + bundle-budget
+├── Phase 3    ← диск / .next → build (≈ Vercel) + bundle-budget
 ├── Phase 3.5  ← Supabase gate (миграции / edge) если есть в diff
-├── Phase 3.9  ← Атомарная упаковка (только если локально зелёно) — без спроса
-├── Phase 4    ← push dev
-├── Phase 5    ← CI: только job'ы из workflow (цель: typecheck + test)
-├── Phase 6    ← PR dev → main → merge
+├── Phase 3.9  ← Атомарная упаковка (без полного test на каждый commit)
+├── Phase 3.95 ← merge origin/main → dev, конфликты ДО push/PR
+├── Phase 4    ← один push dev
+├── Phase 5    ← CI: только job'ы из workflow (цель: typecheck + test) — один круг
+├── Phase 6    ← PR dev → main → merge (уже без конфликтов с main)
 └── Phase 7    ← Vercel production READY + smoke (HTTP + browser)
 ```
 
-**Локальный порядок перед push:** проверки/правки (1–3.5) → **атомарная упаковка (3.9)** → push (4). Успешный `pnpm build` (Phase 3) эмулирует сборку Vercel; отдельный Vercel Preview на `dev` не ждём.
+**Локальный порядок перед push:** проверки/правки (1–3.5) → **атомарная упаковка (3.9)** → **синхронизация с main (3.95)** → push (4). Успешный `pnpm build` (Phase 3) эмулирует сборку Vercel; отдельный Vercel Preview на `dev` не ждём.
+
+### Анти-повторы (чтобы релиз не растягивался)
+
+**Закон для всех проектов** с `/MA-deploy` (не опция и не «только Fast Lease»).
+
+Цель: **один** полный локальный suite (Phase 1) + **один** CI после push + **один** Vercel production. Повторы из‑за хуков/конфликтов — баг процесса.
+
+| Риск | Правило |
+|------|---------|
+| Полный vitest/test на каждый атомарный commit | **Запрещено.** Полный suite — Phase 1 (и тонкий CI Phase 5). В Phase 3.9 — только лёгкий pre-commit |
+| Тяжёлый pre-push дважды (фича, потом снова после merge main) | Сначала **3.95** (main → dev), потом **один** push |
+| Конфликт обнаружен только на PR | **Запрещено.** Конфликты снимать в 3.95 **до** открытия PR |
+| Build упал на ENOSPC | Перед Phase 3 — чек места + безопасная очистка `.next` |
+| Слепой `--no-verify` | **Не** дефолт. Править стратегию хуков (см. `templates/git-hooks-ma-deploy.md`) |
+
+**Thin CI и локальный build не ослаблять:** CI = только `{typecheck, test}`; `pnpm build` перед push остаётся обязательным.
 
 ## Утверждённый план (шаблон для всех проектов)
 
@@ -63,12 +82,13 @@ argument-hint: [auto | check-only | skip-merge]
 |------|------------|-----|
 | 1 | Волны: Bugbot ‖ security ‖ ponytail; typecheck ‖ lint ‖ i18n ‖ tests; фиксы по очереди | локально |
 | 2 | react-doctor | локально |
-| 3 | build (≈ Vercel) + bundle-budget | локально |
+| 3 | диск / `.next` → build (≈ Vercel) + bundle-budget | локально |
 | 3.5 | Supabase: миграции / edge (если есть в diff) | локально / Supabase MCP |
-| 3.9 | Атомарная упаковка грязного дерева (без спроса) | git, **только если 1–3.5 зелёные** |
-| 4 | push `dev` | git |
-| 5 | только то, что реально есть в `.github/workflows/` | CI (страховка) |
-| 6 | PR `dev` → `main` → merge | GitHub |
+| 3.9 | Атомарная упаковка (без полного test на каждый commit) | git, **только если 1–3.5 зелёные** |
+| 3.95 | `origin/main` → `dev`, конфликты до push/PR | git |
+| 4 | один push `dev` | git |
+| 5 | только то, что реально есть в `.github/workflows/` | CI (страховка, один круг) |
+| 6 | PR `dev` → `main` → merge (без сюрпризов-конфликтов) | GitHub |
 | 7 | Vercel production READY + smoke | Vercel |
 
 **Правило разделения локально / CI:**
@@ -112,8 +132,12 @@ argument-hint: [auto | check-only | skip-merge]
 **Атомарные commits — в конце локального цикла (удобство, без спроса):**  
 1. Phase 1–3.5 работают по **рабочему дереву** (грязное OK). Ревью — по незакоммиченному (и по ветке, если уже есть commits vs `main`).  
 2. Фиксы (auto / «чини») **копятся без commit** — иначе каждый блокер плодит лишнюю историю.  
-3. Когда локально **нет блокеров** → Phase 3.9: агент **сам** раскладывает итоговое грязное дерево в атомарные commits (одна причина = один commit) → затем push.  
+3. Когда локально **нет блокеров** → Phase 3.9: агент **сам** раскладывает итоговое грязное дерево в атомарные commits (одна причина = один commit) → **3.95 sync main** → затем **один** push.  
 Не спрашивай «ок?» по коммитам. Не ставь грязное дерево в Таблицу 6. Не коммить «на всякий случай» в начале.
+
+**Хуки и полный test suite:** полный `pnpm test` / vitest — **один раз** в Phase 1 (плюс тонкий CI). На каждый атомарный commit Phase 3.9 полный suite **не** гонять. Стратегия хуков — `templates/git-hooks-ma-deploy.md`. `--no-verify` не использовать как обычный путь.
+
+**Main до PR:** Phase 3.95 обязателен: `origin/main` влит в `dev`, конфликты сняты **до** push и **до** открытия PR. Обнаружить конфликт только на PR = ошибка pipeline.
 
 **React Doctor:** следуй skill `react-doctor`. Команда всегда:
 ```bash
@@ -180,7 +204,13 @@ Baseline: `.react-doctor/baseline.json`. Если файла нет — созд
 
 6. Зафиксируй стартовое состояние: текущая ветка, uncommitted changes (факт, не блокер), последний CI status на `dev`, `CI_JOBS_TO_WAIT`, `HAS_SUPABASE`, список smoke URL.
 
-7. **Не** раскладывай commits в Phase 0. Грязное дерево — нормальный вход. Упаковка = Phase 3.9 после зелёных 1–3.5.
+7. **Аудит git-хуков (скорость):** есть ли husky / lefthook / pre-commit / pre-push?
+   - Если **pre-commit** гоняет полный `pnpm test` / vitest / e2e → **риск повторов** в Phase 3.9. В отчёте Phase 0: «хуки тяжёлые».
+   - **auto:** поправь хуки в дереве по `templates/git-hooks-ma-deploy.md` (лёгкий pre-commit, полный test в pre-push или только в `/MA-deploy`+CI) — commit уйдёт в 3.9.
+   - **safe:** не чинить без «чини»; в Phase 3.9 всё равно не гонять полный suite на каждый commit (см. 3.9: `MA_ATOMIC_PACKING=1`).
+   - **Не** ставь «тяжёлые хуки» в Таблицу 6 как Critical сами по себе — это скорость, не качество. Но отметь в плане.
+
+8. **Не** раскладывай commits в Phase 0. Грязное дерево — нормальный вход. Упаковка = Phase 3.9 после зелёных 1–3.5.
 
 **Gate Phase 0:** таблица «План проекта» заполнена **и** CI = тонкий шаблон (или workflow отсутствует; или в auto уже поправлен в дереве) → Phase 1. Стоп только на реальных блокерах (толстый CI в safe и т.п.) — **не** на «нужны commits».
 
@@ -285,17 +315,58 @@ Fail любого шага → **safe:** стоп; **auto:** после 1C — s
 ### Phase 3.9 — Атомарная упаковка (после зелёных 1–3.5)
 
 **Когда:** локальные фазы 1–3.5 закрыты без открытых блокеров (или блокеры явно сняты решением пользователя).  
-**Где:** перед Phase 4; при `check-only` — в конце прогона (чтобы не оставлять «сырое» дерево после успеха).  
+**Где:** перед Phase 3.95; при `check-only` — в конце прогона (чтобы не оставлять «сырое» дерево после успеха).  
 **Кто:** агент **сам**, без спроса (safe и auto одинаково).
 
+**Полный test suite на каждый commit — запрещён** (это главный источник «очень долгого» релиза):
+
+1. Полный `pnpm test` уже зелёный в Phase 1. Упаковка только раскладывает **уже проверенное** дерево.
+2. Перед серией commits выставь env и держи на всю серию:
+   ```bash
+   export MA_ATOMIC_PACKING=1
+   ```
+   Хуки проекта должны уважать этот флаг (см. `templates/git-hooks-ma-deploy.md`): при `MA_ATOMIC_PACKING=1` pre-commit = только быстрое (lint-staged / format), **без** полного vitest.
+3. **Не** используй `git commit --no-verify` / `--no-gpg-sign` как обычный путь. Исключение: хук сломан и блокирует упаковку *после* явного «чини» / в auto — тогда один раз обойти **и** сразу починить хук в дереве (отдельный commit в этой же 3.9).
+4. Если после серии commits нужно успокоить pre-push: полный suite уже был в Phase 1; повторный полный локальный test **перед push** — только если правили код *после* Phase 1 или хук pre-push требует (один раз на весь push, не на каждый commit).
+
+Шаги упаковки:
+
 1. `git status` + полный diff vs `HEAD` / vs `main` — что ещё не закоммичено
-2. Если дерево чистое → Таблица 4 из `main..HEAD`, сразу Phase 4 (или конец check-only)
+2. Если дерево чистое → Таблица 4 из `main..HEAD`, сразу Phase 3.95 (или конец check-only без 3.95, если push не будет)
 3. Если грязное → разложи на атомарные commits (одна причина = один). **Запрещено** один commit «все изменения перед деплоем»
 4. Не используй `git rebase -i` / `git add -i`. Soft reset только на **своих непушеных** commits, если нужно переразложить локальную историю до упаковки
 5. Огромные commits **уже на remote** — не переписывать; упаковывай только текущий dirty tree
-6. Заполни Таблицу 4 → Phase 4 (или итог check-only)
+6. Заполни Таблицу 4 → **Phase 3.95** (не Phase 4 напрямую). При `check-only` без push: 3.95 можно skip, если не будете пушить сейчас
 
 **Не** запускай 3.9, если есть открытые блокеры (safe ждёт / auto не сошёлся) — иначе закоммитишь недоделанное.
+
+### Phase 3.95 — Подтянуть main в dev (до push и до PR)
+
+**Обязательно** перед Phase 4 (и перед любым PR). Цель: **один** push и **один** CI без второго круга из‑за конфликтов на PR.
+
+Пропусти только при `check-only` (нет push/PR).
+
+1. Обнови ссылки:
+   ```bash
+   git fetch origin main dev
+   git checkout dev
+   git pull --ff-only origin dev || git pull origin dev
+   ```
+2. Влей свежий main:
+   ```bash
+   git merge origin/main
+   ```
+   - Конфликты → разреши **сейчас** (auto: чинить; safe: стоп + Таблица 6 «конфликт с main до PR»).
+   - После разрешения: если менялся код/lockfile — быстро перепроверь упавшие по смыслу шаги (минимум typecheck; tests — если трогали логику). Не открывай PR с конфликтами.
+3. Убедись, что `dev` содержит `origin/main` (нет расхождения, которое GitHub пометит как conflict):
+   ```bash
+   git merge-base --is-ancestor origin/main HEAD && echo "main reachable from dev"
+   ```
+4. В отчёт: «main влит в dev до push» + были ли конфликты.
+
+**Gate:** `origin/main` — предок текущего `dev` (или merge уже сделан без конфликтов) → Phase 4.
+
+**Запрещено:** открыть PR, увидеть conflict, потом merge main → ещё push → ещё CI. Это запрещённый анти-паттерн для **всех** проектов.
 
 ## Phase 2 — React Doctor (loop + минимум +1 к score)
 
@@ -332,9 +403,23 @@ Fail любого шага → **safe:** стоп; **auto:** после 1C — s
 
 Команды — из «План проекта». После зелёных Phase 1–2. При `check-only` build всё равно обязателен.
 
+0. **Диск и кэш перед build (обязательно):**
+   ```bash
+   df -Pk . | awk 'NR==2 {print $4}'   # свободные KiB
+   ```
+   - Если свободно **< 3 GiB** (≈ 3145728 KiB) **или** недавно был ENOSPC:
+     - безопасная очистка только артефактов сборки (не трогай исходники и `.env`):
+       ```bash
+       rm -rf .next .turbo
+       # monorepo: то же в React-корне (web/, apps/…)
+       ```
+     - при необходимости: `pnpm store prune` только если места всё ещё мало и пользователь/auto разрешает чистку кэша пакетов
+   - В отчёт: свободное место до/после. Build при < 1 GiB свободных → стоп (Таблица 6 «мало места на диске»), не тратить время на заведомый ENOSPC.
+
 1. **Build** — `pnpm build`. **Обязательно локально** (до упаковки и push).
    - Эмулирует production-сборку Vercel
    - fail → **не** Phase 3.9 / **не** push; safe стоп / auto fix в дереве (`systematic-debugging`)
+   - ENOSPC → очистка `.next` (п.0) → один повтор; второй fail = блокер
 
 2. **Bundle budget** — `pnpm check:bundle-budget` сразу после build.
    - Только локально; пропусти если script нет
@@ -363,19 +448,21 @@ Fail любого шага → **safe:** стоп; **auto:** после 1C — s
    - **auto:** выполни безопасный выкат по принятому в проекте способу (миграции / edge); правки кода репозитория **без commit** до 3.9; схемы на remote — только если это стандарт проекта и не требует секретов в чат. Если нельзя безопасно — стоп с отчётом даже в auto
 5. Если supabase-изменений в diff нет → строка в отчёте: «база/функции — не нужно»
 
-**Gate:** supabase OK или skip → **Phase 3.9** (атомарная упаковка), затем Phase 4.
+**Gate:** supabase OK или skip → **Phase 3.9** (атомарная упаковка) → **Phase 3.95** → Phase 4.
 
 ## Phase 4 — Push на dev
 
-Пропусти если `check-only` (но Phase 3.9 при успехе check-only всё равно выполняется).
+Пропусти если `check-only` (но Phase 3.9 при успехе check-only всё равно выполняется; 3.95 skip).
 
-1. **Предусловие:** Phase 3.9 закрыта — грязного дерева нет (или осознанно нечего коммитить). Uncommitted diff после 3.9 = ошибка pipeline.
-2. **Не** создавай здесь новые commits (кроме экстренного дожима, если 3.9 что-то пропустила — лучше вернуться в 3.9).
-3. Всё на `dev`:
-   - feature → merge/rebase в `dev`
-   - `git checkout dev && git pull && git merge <feature>`
-   - `git push origin dev`
-4. Tip SHA + `git log --oneline main..dev` → отчёт.
+1. **Предусловия:**
+   - Phase 3.9 закрыта — грязного дерева нет (или осознанно нечего коммитить). Uncommitted diff после 3.9 = ошибка pipeline.
+   - Phase 3.95 закрыта — `origin/main` уже в `dev`, конфликтов нет.
+2. **Не** создавай здесь новые commits (кроме экстренного дожима, если 3.9/3.95 что-то пропустили — лучше вернуться туда).
+3. **Один** push на `dev` (после sync — не два круга):
+   - feature → merge в `dev` (если ещё не на `dev`)
+   - `git checkout dev && git push origin dev`
+4. В статусе процесса: «Ждём: push принят / CI стартует», обычно **< 1 мин** до появления run.
+5. Tip SHA + `git log --oneline main..dev` → отчёт.
 
 ## Phase 5 — CI на dev зелёный
 
@@ -385,6 +472,10 @@ Fail любого шага → **safe:** стоп; **auto:** после 1C — s
 
 Жди только `CI_JOBS_TO_WAIT` = `{typecheck, test}` (что реально есть в тонком workflow).
 
+В **Статусе процесса** сразу напиши:
+- Ждём: CI на `dev` (`typecheck` + `test`)
+- Обычно занимает: **~3–10 мин** (зависит от проекта; не путать с Vercel)
+
 ```bash
 gh run list --branch dev --limit 3
 gh run watch <run-id> --exit-status
@@ -393,11 +484,11 @@ gh run watch <run-id> --exit-status
 - Fail:
   1. Сначала subagent **`ci-investigator`** (один упавший check → короткий root-cause)
   2. При необходимости углуби через `systematic-debugging` + `gh run view --log-failed`
-  3. **auto:** fix **в дереве** → атомарные commits (как 3.9) на dev → push → watch
+  3. **auto:** fix **в дереве** → атомарные commits (как 3.9) на dev → **снова 3.95 если нужно** → **один** push → watch
   4. **safe:** стоп + Таблица 6
 - CI не триггерится на `dev` → добавь `dev` в workflow triggers (это часть тонкого шаблона), commit, push
 
-**Gate:** все `CI_JOBS_TO_WAIT` green → Phase 6. Preview не ждём.
+**Gate:** все `CI_JOBS_TO_WAIT` green → Phase 6. Preview не ждём. Цель — **один** зелёный CI-круг на этот релиз, не серия из‑за позднего merge main.
 
 ## Phase 6 — PR dev → main → merge
 
@@ -407,16 +498,19 @@ gh run watch <run-id> --exit-status
 
 Почему: squash на `main` ломает общую историю с `dev`. Git потом видит «два разных изменения одних и тех же мест», и каждый следующий релиз снова просит разрулить те же файлы — даже если правки на `dev` уже были влиты. Обычный merge сохраняет связь веток: параллельная работа на `dev` во время релиза не «перетирается» искусственным выравниванием после squash.
 
-1. PR **dev → main**:
+**Предусловие:** Phase 3.95 уже сняла конфликты с `main`. Если GitHub всё же показывает conflict — **не** «чинить на PR как основной путь»: вернись к 3.95 локально, почини, push, обнови PR.
+
+1. PR **dev → main** (только после 3.95):
    ```bash
    gh pr list --head dev --base main --state open
    gh pr create --base main --head dev --title "..." --body "..."
    ```
-2. Дождись green PR checks = `CI_JOBS_TO_WAIT`:
+2. Дождись green PR checks = `CI_JOBS_TO_WAIT` (часто уже зелёные с Phase 5 — не гоняй лишний круг без нужды):
    ```bash
    gh pr checks <number> --watch
    ```
-3. Если PR **застрял** (конфликты, висящие review-комменты, красный CI после merge main): следуй skill **`babysit`** (в рамках safe/auto: в safe — только диагноз в Таблицу 6; в auto — чинить и довести до merge-ready). Не используй babysit как замену всего Phase 6.
+   Статус: «Ждём: проверки PR», обычно **~0–10 мин** если CI уже прошёл на `dev`.
+3. Если PR **застрял** (висящие review-комменты, красный CI): следуй skill **`babysit`** (в рамках safe/auto: в safe — только диагноз в Таблицу 6; в auto — чинить и довести до merge-ready). Конфликт с main после 3.95 = регресс процесса, чинить через 3.95. Не используй babysit как замену всего Phase 6.
 4. Merge (**только** `--merge`, ветку `dev` не удалять):
    ```bash
    gh pr merge <number> --merge --delete-branch=false
@@ -447,9 +541,10 @@ vercel inspect <prod-deployment-url>
 
 ### 2. Poll до green
 
+- В статусе: «Ждём: Vercel production READY», обычно **~5–10 мин** (типично 5–7)
 - Жди **READY** (timeout 20 мин)
 - ERROR → MCP `get_deployment_build_logs` (errorsOnly) → блокер
-  - **auto:** fix → Phase 3–6 заново (новый PR через `dev`)
+  - **auto:** fix → Phase 3–6 заново (новый PR через `dev`, снова с 3.95)
   - **safe:** стоп + Таблица 6
 
 ### 3. Production smoke (два слоя)
@@ -482,7 +577,11 @@ vercel inspect <prod-deployment-url>
 |------|----------|
 | Сейчас | идёт процесс / нужно ваше решение / готово |
 | Что происходит | одна фраза простым языком |
+| Ждём | ничего / CI на dev / Vercel production / ваш ответ по блокерам / … |
+| Обычно занимает | — / ~3–10 мин (CI) / ~5–10 мин (Vercel) / пока не ответите |
 | Что от вас | ничего / … |
+
+Пока идёт ожидание (CI, Vercel) — **обновляй** этот блок в каждом промежуточном ответе: что именно ждём и типичное время. Не оставляй пользователя без ориентира «почему тишина».
 
 Потом таблицы ниже. Поле «Этап работы» в Таблице 1 должно **согласовываться** с «Сейчас» (не противоречить).
 
@@ -496,11 +595,15 @@ vercel inspect <prod-deployment-url>
 | Typecheck | 1 + 5 | да | `typecheck` | `pnpm typecheck` | ✅ / ❌ блокер |
 | … | … | … | … | … | … |
 | Supabase | 3.5 | — | — | MCP / skip | ✅ |
+| Упаковка commits | 3.9 | нет | — | атомарно + `MA_ATOMIC_PACKING=1` | ✅ |
+| Sync main → dev | 3.95 | нет | — | `git merge origin/main` до PR | ✅ |
 | CI шаблон | 0 | — | только typecheck+test | thin template | ✅ / ❌ блокер |
 
 `CI_JOBS_TO_WAIT`: `typecheck`, `test` (только эти)  
 `CI_TEMPLATE`: thin / **too-thick (блокер)** / none  
-`HAS_SUPABASE`: yes/no
+`HAS_SUPABASE`: yes/no  
+`HOOKS`: light / heavy→fix / heavy→risk  
+`DISK_BEFORE_BUILD`: OK / cleaned `.next` / blocker
 
 ### Таблица 1 — Сводка (простым языком)
 
@@ -526,6 +629,9 @@ vercel inspect <prod-deployment-url>
 | Vercel на main | READY / ERROR / skip |
 | Smoke | HTTP+runtime / +browser / partial |
 | Простота (ponytail) | `Lean` / `-N` (в safe блокер если ≤ -80) |
+| Сейчас ждём | ничего / CI (~3–10 мин) / Vercel (~5–10 мин) / ваше решение |
+| Хуки | лёгкие / тяжёлые (исправлены в 3.9) / риск (safe, не чинили) |
+| main → dev до PR | сделано (3.95) / skip (check-only) / блокер |
 
 **Словарь «Этап работы»** (выбери одну фразу):
 
@@ -533,8 +639,11 @@ vercel inspect <prod-deployment-url>
 |------|----------------|
 | Проверки идут, правки ещё не упакованы | Phase 1–3.5, дерево может быть грязным — это норма |
 | Жду вашего решения по блокерам | safe-стоп; коммиты **не** делаем |
-| Всё зелёно, упаковываю перед выкладкой | Phase 3.9 |
+| Всё зелёно, упаковываю перед выкладкой | Phase 3.9 (без полного test на каждый commit) |
+| Подтягиваю main в dev | Phase 3.95 |
 | Упаковано, выкладываю | Phase 4+ |
+| Жду CI на dev (~3–10 мин) | Phase 5 |
+| Жду Vercel production (~5–10 мин) | Phase 7 poll |
 | Готово на проде | Phase 7 успех |
 | Только проверки (без выкладки) | `check-only` после 3.9 |
 
@@ -552,10 +661,12 @@ vercel inspect <prod-deployment-url>
 | i18n | 1 | `…` | ✅ / ❌ / skip | — | — | — |
 | Tests | 1 | `…` | ✅ / ❌ / skip | — | — | — |
 | React Doctor | 2 | `react-doctor` | ✅ / ❌ / skip | — | — | — |
+| Disk / `.next` | 3 | `df` + safe clean | ✅ / ❌ / skip | — | — | — |
 | Build (≈ Vercel) | 3 | `pnpm build` | ✅ / ❌ / skip | — | — | — |
 | Bundle budget | 3 | `…` / `performance-optimizer` | ✅ / ❌ / skip | — | — | — |
 | Supabase | 3.5 | MCP / skip | ✅ / ❌ / skip | — | — | — |
-| Упаковка commits | 3.9 | атомарно, без спроса | ✅ / skip | — | — | — |
+| Упаковка commits | 3.9 | атомарно, без полного test/commit | ✅ / skip | — | — | — |
+| Sync main → dev | 3.95 | merge до push/PR | ✅ / ❌ / skip | — | — | — |
 | Loop итераций | — | — | N из 5 | — | — | — |
 
 ### Таблица 2b — Ponytail (если были находки)
@@ -588,12 +699,13 @@ vercel inspect <prod-deployment-url>
 
 | Phase | Действие | Статус | Ссылка / детали |
 |-------|----------|--------|-----------------|
-| 3.9 Упаковка | атомарные commits | ✅ / skip | N commits |
-| 4 Push dev | `git push origin dev` | ✅ / ❌ / skip | commit `<sha>` |
-| 5 CI dev | `CI_JOBS_TO_WAIT` (+ `ci-investigator` при fail) | ✅ / ❌ / skip | run URL |
-| 6 PR | dev → main | ✅ / ❌ / skip | PR URL |
+| 3.9 Упаковка | атомарные commits (без полного test на каждый) | ✅ / skip | N commits |
+| 3.95 Sync main | `origin/main` → `dev` до PR | ✅ / ❌ / skip | конфликты: да/нет |
+| 4 Push dev | **один** `git push origin dev` | ✅ / ❌ / skip | commit `<sha>` |
+| 5 CI dev | `CI_JOBS_TO_WAIT` (~3–10 мин) | ✅ / ❌ / skip | run URL |
+| 6 PR | dev → main (уже без конфликтов) | ✅ / ❌ / skip | PR URL |
 | 6 Merge | merge commit, не squash (+ `babysit` если застрял) | ✅ / ❌ / skip | merge SHA |
-| 7 Vercel Production | main → READY | ✅ / ❌ / skip | prod URL |
+| 7 Vercel Production | main → READY (~5–10 мин) | ✅ / ❌ / skip | prod URL |
 | 7 Smoke A | HTTP + runtime errors | ✅ / ❌ / skip | routes |
 | 7 Smoke B | `agent-browser` | ✅ / ❌ / ⚠️ fallback | URLs |
 
@@ -619,19 +731,22 @@ vercel inspect <prod-deployment-url>
 
 - Грязное дерево в Phase 0–3.5 — **не** стоп; коммиты только в Phase 3.9 после зелёных локальных шагов. Уже запушенные огромные commits — без rewrite
 - Push / конец check-only при успехе, но с незакрытым dirty tree (пропущен 3.9) — ошибка pipeline
+- Push/PR без Phase 3.95 (main не влит в dev) — ошибка pipeline; конфликт «всплыл на PR» — регресс
 - Critical из Bugbot / security не закрыт (safe = стоп; auto = чинить до лимита)
 - Ponytail `net ≤ -80` в **safe** не закрыт решением пользователя (в **auto** — не стоп, только отчёт)
 - Внешний skill `ponytail-review` отсутствует на диске (нужен `install-external-skills.sh`)
 - typecheck / lint / i18n / test fail (Phase 1)
 - React Doctor errors > 0 или score < baseline + 1 (Phase 2)
+- Мало места на диске (< 1 GiB) или повторный ENOSPC после очистки `.next` (Phase 3)
 - build / bundle-budget fail (Phase 3) — **push запрещён**
 - Supabase: в diff есть миграции/functions, прод не готов, нет безопасного плана (Phase 3.5)
 - CI на dev красный (`CI_JOBS_TO_WAIT`)
 - **CI толще тонкого шаблона** (любой job кроме `typecheck` / `test`) — **стоп**, пока workflow не упрощён; нельзя «подождать и пойти дальше»
-- PR conflicts или failing required checks
+- PR conflicts или failing required checks (конфликт после 3.95 = чинить через 3.95, не «на глаз» в UI)
 - Push не в `dev` или PR не dev → main
 - **Vercel Production (main) не READY**
 - Секреты / `.env` / tokens в diff — **всегда стоп**, даже в `auto`
+- Полный test suite на каждый атомарный commit Phase 3.9 без попытки `MA_ATOMIC_PACKING` / правки хуков — анти-паттерн (в auto — исправить процесс; не считать «нормальной скоростью»)
 
 ## Skills / MCP для агента (обязательная маршрутизация)
 
