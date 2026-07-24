@@ -20,22 +20,23 @@ cd ~/ma-hub
 
 Внешние skills (Aaron, Vercel, ponytail…): реестр `registry/external-skills.*` → `./bootstrap/install-external-skills.sh` (или weekly).
 
-## Еженедельное обновление (latest с main)
+## Автообновление (latest)
 
-Уже в weekly maintenance, или вручную:
+После `bootstrap` на Mac:
 
-```bash
-~/ma-hub/bootstrap/pull.sh
-# или: ma-hub-pull
-```
-
-Тянет `main`, заново ставит команды и MA-skills из хаба (чтобы локальный кэш не устарел).
-
-Проверка, что локальный кэш = хаб:
+1. **Ежедневно** — launchd `com.ma-hub.ensure-latest` (по умолчанию 09:15)
+2. **При старте чата** — мягкий `sessionStart` hook, если кэш старше 24 часов
+3. **Вручную / weekly** — принудительно:
 
 ```bash
-ma-hub-check-drift
+ma-hub-ensure-latest          # умный: только если на origin новый SHA/VERSION
+ma-hub-pull                   # то же с --force (всегда pull + install)
+ma-hub-check-drift            # кэш == хаб?
 ```
+
+Логика «есть ли новое»: git SHA ветки на `origin` и `standards/VERSION` vs `~/.config/ma-hub/installed-state`.
+
+Облачный агент: [`templates/cloud-ma-setup.md`](templates/cloud-ma-setup.md) · процесс: [`docs/auto-sync.md`](docs/auto-sync.md)
 
 ## Что внутри
 
@@ -45,10 +46,11 @@ ma-hub-check-drift
 | `commands/` | Источник команд `/MA-*` |
 | `skills/` | MA-owned skills (оркестраторы Monster Automation) |
 | `registry/` | Проекты + **ссылки** на внешние skills (`external-skills.*`) |
-| `bootstrap/` | Установка, pull, drift, install-external-skills |
-| `templates/` | Тонкая ссылка для каждого проекта |
+| `bootstrap/` | Установка, ensure-latest, cloud-ensure, drift |
+| `templates/` | Тонкая ссылка для каждого проекта + cloud setup |
 | `docs/user-rules.md` | Бэкап личных правил Cursor |
 | `docs/hub-maintenance.md` | Как не забыть обновить хаб |
+| `docs/auto-sync.md` | Daily/version sync + Cloud Agent |
 
 ## Слои (коротко)
 

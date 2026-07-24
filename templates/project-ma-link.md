@@ -21,6 +21,6 @@
 
 ## Политика
 
-- **track main** — рекоменуется: weekly `ma-hub-pull` держит свежие стандарты и команды.
+- **track main** — рекомендуется: daily `ma-hub-ensure-latest` (и weekly/`ma-hub-pull`) держит свежие стандарты и команды. Для Cloud Agent см. `templates/cloud-ma-setup.md`.
 - **pin** — только для критичных продуктов; перед revise осознанно обновить pin.
 - **без дублей** — не держать вторые копии стандартов MA в `docs/`, Cursor rules и т.п.; уникальное локальное — только здесь (раздел Local deviations).

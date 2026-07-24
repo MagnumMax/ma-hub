@@ -51,7 +51,9 @@
 
 - Внешние skills (ponytail, Aaron, Vercel…): в ma-hub только ссылки (registry/external-skills.*), не копии текста. Установка с upstream: bootstrap/install-external-skills.sh. Команды читают актуальный SKILL.md с диска.
 
-- Если меняешь любую MA-команду, MA-skill, стандарт, registry внешних skills или этот бэкап user-rules: править файлы в ma-hub → прогнать bootstrap/install-commands.sh и bootstrap/install-skills.sh (и install-external-skills.sh при изменении registry) → bootstrap/check-local-drift.sh → commit и push ma-hub (если пользователь не просил commit — явно сказать, что без push другие проекты не увидят изменения).
+- Если меняешь любую MA-команду, MA-skill, стандарт, registry внешних skills или этот бэкап user-rules: править файлы в ma-hub → прогнать bootstrap/install-commands.sh и bootstrap/install-skills.sh (и install-external-skills.sh при изменении registry) → bootstrap/check-local-drift.sh → commit и push ma-hub (если пользователь не просил commit — явно сказать, что без push другие проекты и облако не увидят изменения).
+
+- На машинах кэш обновляется сам: ежедневный ma-hub-ensure-latest (+ мягкий sync при старте чата). В Cloud Agent нужен cloud-ensure в среде (см. docs/auto-sync.md). Не полагаться на «только файлы на этом Mac».
 
 - Запрещено оставлять новую /MA-* или MA-skill только в ~/.cursor/. Запрещено вендорить чужой SKILL.md в ma-hub. Подробности: docs/hub-maintenance.md в ma-hub.
 ```
