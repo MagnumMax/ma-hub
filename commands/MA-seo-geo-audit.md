@@ -13,11 +13,25 @@ argument-hint: "<URL или домен> [local|prod|full|page|tech|structure|aut
 
 **GEO** = видимость и цитируемость в ответах ИИ (ChatGPT, Perplexity, AI Overviews, Gemini, Claude и т.п.), не замена обычному SEO.
 
-## Hub (обязательно)
+## 0. Ворота: стандарт в проекте
 
 Найди **ma-hub**: `~/.config/ma-hub/config` → `MA_HUB_ROOT`, иначе `~/ma-hub`.  
 Источник правды skill-оркестратора: **`$MA_HUB_ROOT/skills/seo-geo-audit/`** (кэш: `~/.cursor/skills/seo-geo-audit/`).  
-Локальные SEO/GEO-чеклисты проекта (если есть) учитывай, но **не подменяй** ими треки Aaron.  
+Проверь в **текущем проекте** файл `docs/MA-STANDARDS.md`.
+
+### Если файла нет — стоп
+Не начинай аудит. Предложи создать визитку из `$MA_HUB_ROOT/templates/project-ma-link.md` → `docs/MA-STANDARDS.md`.
+
+Объясни коротко **зачем**:
+- это связь проекта с общими правилами Monster Automation (вкус, процесс, качество);
+- без неё команда не знает pin / локальные отклонения и легко уйдёт «в общий шаблон», а не в закон этого продукта;
+- сами правила живут в хабе (`standards/`), в проекте — только ссылка и ваши исключения.
+
+Спроси: «Создать `docs/MA-STANDARDS.md`? **ок** / позже».  
+До «ок» (или явного «позже, всё равно продолжай») дальше не иди. После создания — учти pin и Local deviations.
+
+### Если файл есть
+Учти pin и Local deviations. Локальные SEO/GEO-чеклисты проекта (если есть) учитывай, но **не подменяй** ими треки Aaron.
 
 Если правишь эту команду или skill — только в ma-hub, затем `install-commands` + `install-skills` + commit/push (см. `docs/hub-maintenance.md`).
 
