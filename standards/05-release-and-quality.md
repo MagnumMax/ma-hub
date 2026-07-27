@@ -22,10 +22,11 @@
 
 - Полный test suite — **один раз** локально в Phase 1 (+ тонкий CI). **Не** на каждый атомарный commit.
 - **Git-хуки** — жёсткий gate в Phase 0 `/MA-deploy` (зеркало thin CI): тяжёлый pre-commit = блокер; в auto чинить по `templates/git-hooks-ma-deploy.md` + `MA_ATOMIC_PACKING=1`; в safe — стоп до «чини».
+- **Форма CI (минуты Actions)** — минуты = число runner-job’ов × число запусков на коммит. Эталон: `templates/ci-ma-deploy.md` (+ `ci-ma-deploy.yml`): один job (install → typecheck → test), только `push` на `main`/`dev`, `concurrency` с cancel-in-progress. Дубль `pull_request` в своём репо без форков = блокер; исключение — Local deviations «есть форки».
 - Перед push/PR: влить `origin/main` в `dev` и снять конфликты (**Phase 3.95**). Не открывать PR «вслепую» и ловить конфликт вторым кругом CI.
 - Перед локальным build: проверить свободное место; при нехватке — безопасная очистка `.next` (и аналогов), чтобы не ловить ENOSPC.
 - В статусе процесса явно писать **что ждём** и **сколько обычно занимает** (CI ~3–10 мин, Vercel ~5–10 мин).
-- Thin CI (`typecheck`+`test`) и локальный `pnpm build` перед push — **обязательны**, не ослаблять.
+- Thin CI (`typecheck`+`test`) и локальный `pnpm build` перед push — **обязательны**, не ослаблять. Экономим **дубли job’ов/событий**, не покрытие.
 
 ## Правило пауз (все длинные /MA-*)
 

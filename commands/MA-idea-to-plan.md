@@ -9,10 +9,25 @@ argument-hint: "<описание идеи или фичи>"
 
 **Вход:** $ARGUMENTS
 
-## Hub + стандарты (обязательно)
-Сначала найди **ma-hub**: `~/.config/ma-hub/config` → `MA_HUB_ROOT`, иначе `~/ma-hub`.  
-Перед планом прочитай `$MA_HUB_ROOT/standards/` — особенно `02-product-preferences.md`, `03-engineering-defaults.md`, `01-role-and-voice.md`.  
-Если проекта нет — скажи запустить bootstrap. Если есть `docs/MA-STANDARDS.md` — уважай pin/отклонения.
+## 0. Ворота: стандарт в проекте
+
+Найди **ma-hub**: `~/.config/ma-hub/config` → `MA_HUB_ROOT`, иначе `~/ma-hub`.  
+Если хаба нет — скажи запустить bootstrap и остановись.  
+Проверь в **текущем проекте** файл `docs/MA-STANDARDS.md`.
+
+### Если файла нет — стоп
+Не начинай ритуал. Предложи создать визитку из `$MA_HUB_ROOT/templates/project-ma-link.md` → `docs/MA-STANDARDS.md`.
+
+Объясни коротко **зачем**:
+- это связь проекта с общими правилами Monster Automation (вкус, процесс, качество);
+- без неё команда не знает pin / локальные отклонения и легко уйдёт «в общий шаблон», а не в закон этого продукта;
+- сами правила живут в хабе (`standards/`), в проекте — только ссылка и ваши исключения.
+
+Спроси: «Создать `docs/MA-STANDARDS.md`? **ок** / позже».  
+До «ок» (или явного «позже, всё равно продолжай») дальше не иди. После создания — учти pin и Local deviations.
+
+### Если файл есть
+Учти pin и Local deviations. Перед планом прочитай `$MA_HUB_ROOT/standards/` — особенно `02-product-preferences.md`, `03-engineering-defaults.md`, `01-role-and-voice.md`.
 
 ## Обязательный порядок (не пропускай шаги)
 

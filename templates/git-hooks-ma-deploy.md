@@ -6,7 +6,7 @@
 - **auto** → агент сам приводит хуки к этому шаблону в рабочем дереве
 - **safe** → стоп + «чини», без скрытого `--no-verify`
 
-Thin CI (`typecheck` + `test`) и локальный `pnpm build` в `/MA-deploy` **не** отменяем — меняем только **где** полный suite запускается. Исключений «для одного проекта» нет.
+Thin CI (`typecheck` + `test`) и локальный `pnpm build` в `/MA-deploy` **не** отменяем — меняем только **где** полный suite запускается. Форма CI (один job, без дубля PR) — см. `templates/ci-ma-deploy.md`. Исключений «для одного проекта» нет.
 
 ## Целевая схема
 
@@ -14,7 +14,7 @@ Thin CI (`typecheck` + `test`) и локальный `pnpm build` в `/MA-deploy
 |-----|---------------|------------------|
 | **pre-commit** | lint-staged / format / быстрый eslint на staged | полный `pnpm test`, vitest без фильтра, e2e, build |
 | **pre-push** | по желанию: `pnpm typecheck` и/или `pnpm test` **один раз** на push | тот же suite повторно на каждый commit |
-| **CI** | только thin: `typecheck` + `test` | lint, build, doctor, i18n |
+| **CI** | только thin+cheap: один job typecheck+test; эталон `templates/ci-ma-deploy.md` | lint, build, doctor, i18n; два job’а; дубль pull_request без форков |
 | **`/MA-deploy` Phase 1** | полный локальный suite + ревью + lint/i18n | — |
 | **`/MA-deploy` Phase 3** | `pnpm build` (+ bundle budget) | — |
 
@@ -69,3 +69,4 @@ pnpm typecheck && pnpm test
 2. Перенести полный test из pre-commit в pre-push (или оставить только `/MA-deploy` + CI)
 3. Добавить ветку `MA_ATOMIC_PACKING=1` в pre-commit
 4. Не ослаблять thin CI и не убирать локальный build из `/MA-deploy`
+5. Форму CI (один job, один триггер) сверять с `templates/ci-ma-deploy.md`
