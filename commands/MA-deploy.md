@@ -54,7 +54,7 @@ argument-hint: [auto | check-only | skip-merge]
 ```
 0 → 1 (ревью ‖ проверки) → 2 (react-doctor) → 3 (disk/build/budget)
   → 3.5 (supabase если нужно) → 3.9 (атомарные commits) → 3.95 (main → dev)
-  → 4 (один push dev) → 5 (CI typecheck+test) → 6 (PR → merge) → 7 (Vercel + smoke)
+  → 4 (один push dev) → 5 (CI typecheck+test) → 6 (PR → merge) → 7 (Vercel + smoke) → 7.5 (Telegram клиенту после «ок»)
 ```
 
 Локально перед push: 1–3.5 → **3.9** → **3.95** → 4. `pnpm build` = эмуляция Vercel; Preview на `dev` **не** ждём.
@@ -71,6 +71,7 @@ argument-hint: [auto | check-only | skip-merge]
 | build + bundle-budget | 3 | `pnpm build`, `pnpm check:bundle-budget` |
 | supabase | 3.5 | MCP/CLI если diff |
 | Vercel prod + smoke | 7 | Vercel MCP + `agent-browser` |
+| Клиентский апдейт в Telegram | 7.5 | эталон `templates/telegram-customer-update-ma-deploy.md` + `bootstrap/telegram-customer-update-send.sh` |
 
 ## Жёсткие законы
 
@@ -187,7 +188,23 @@ Skip при `check-only` / `skip-merge`. Skills: `vercel-cli`, `deployments-cicd
 2. Smoke A: HTTP 200 `/` (+ `/api/health` если есть); `get_runtime_errors` ~15m.
 3. Smoke B: `agent-browser` на 1–2 ключевых prod URL (не blank/5xx). Нет browser → ⚠️ в отчёте, не фейковый полный ✅.
 
-**Gate:** READY + A OK + B OK (или явный fallback) = успех.
+**Gate:** READY + A OK + B OK (или явный fallback) = успех → **Phase 7.5**.
+
+## Phase 7.5 — Клиентское уведомление в Telegram
+
+Skip при `check-only` / `skip-merge`. Эталон: `$MA_HUB_ROOT/templates/telegram-customer-update-ma-deploy.md`.  
+**Только здесь** (не на PR, не отдельным Actions). Клиенту — после успешного прода.
+
+1. Загрузить env: `.env.local` / `.env` продукта **и** `~/.config/ma-hub/telegram.env`.  
+   - Токен: **`MA_TELEGRAM_BOT_TOKEN`** (общий, из `telegram.env` на машине; не ops-`TELEGRAM_BOT_TOKEN` продукта).  
+   - Чат клиента: **`COMPANY_TELEGRAM_CHAT_ID`** + опционально **`COMPANY_TELEGRAM_THREAD_ID_UPDATES`** (топик Updates) — **в каждом продукте**.
+2. Собрать изменения релиза (commits / PR `dev→main`) → черновик **деловым языком**: продукт + дата; до **10** пунктов вида «страница/функция — что изменилось»; без путей, SHA, жаргона.
+3. Показать черновик пользователю. **Даже в `auto` — пауза:** «Отправить клиенту? **ок** / правки: … / **не слать**».
+4. После «ок» (с учётом правок):  
+   `"$MA_HUB_ROOT/bootstrap/telegram-customer-update-send.sh"` со текстом на stdin (или `--file`). Не печатать токен.
+5. Нет chat id / токена / отказ «не слать» → ⚠️ в отчёте, **не** откатывать успешный прод.
+
+**Gate:** отправлено / пропущено с явной причиной → Отчёт.
 
 ## Отчёт
 
@@ -198,15 +215,16 @@ Skip при `check-only` / `skip-merge`. Skills: `vercel-cli`, `deployments-cicd
 | # | Содержание |
 |---|------------|
 | 0 | План проекта + `CI_JOBS_TO_WAIT` / thin+cheap|thick|expensive / hooks light|heavy / `HAS_SUPABASE` / disk |
-| 1 | Сводка простым языком: этап, safe/auto, блокеры?, commits, PR, merge, Vercel, smoke, ponytail |
+| 1 | Сводка простым языком: этап, safe/auto, блокеры?, commits, PR, merge, Vercel, smoke, ponytail, Telegram клиенту |
 | 2 | Шаги 1–3.5 / 3.9 / 3.95 — результат |
 | 2b | Ponytail findings + `net` (если были) |
 | 3 | React Doctor baseline → score/errors |
 | 4 | Атомарные commits (SHA + сообщение) |
 | 5 | Phase 4–7 статусы + ссылки |
+| 5b | Phase 7.5: черновик согласован? / отправлено / пропуск (причина) |
 | 6 | Блокеры (только если есть) |
 
-**Этап работы** (одна фраза): проверки без упаковки / жду решения / упаковываю / main→dev / выкладываю / жду CI / жду Vercel / готово на проде / только проверки.
+**Этап работы** (одна фраза): проверки без упаковки / жду решения / упаковываю / main→dev / выкладываю / жду CI / жду Vercel / согласование текста клиенту / готово на проде / только проверки.
 
 В **safe** при стопе — Таблица 6 + строка: нужны решения по блокерам («чини» / «не чинить» / «отложить»); ночной прогон — `/MA-deploy auto`.
 
@@ -237,3 +255,4 @@ Skip при `check-only` / `skip-merge`. Skills: `vercel-cli`, `deployments-cicd
 | 5 fail | `ci-investigator` |
 | 6 stuck | `babysit` |
 | 7 | Vercel MCP + `vercel-cli` / `deployments-cicd`; smoke B → `agent-browser` |
+| 7.5 | черновик клиенту → «ок» → `bootstrap/telegram-customer-update-send.sh` |

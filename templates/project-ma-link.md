@@ -26,3 +26,4 @@
 - **без дублей** — не держать вторые копии стандартов MA в `docs/`, Cursor rules и т.п.; уникальное локальное — только здесь (раздел Local deviations).
 - **git-хуки** — универсальное правило для всех продуктов с `/MA-deploy`: см. `templates/git-hooks-ma-deploy.md` (лёгкий pre-commit, полный test не на каждый атомарный commit).
 - **CI (минуты Actions)** — эталон `templates/ci-ma-deploy.md`: один job typecheck+test, только push на main/dev; дубль pull_request — только если в Local deviations «есть форки».
+- **Клиентский Telegram после прода** — эталон `templates/telegram-customer-update-ma-deploy.md` (Phase 7.5 `/MA-deploy`, всегда согласование текста).

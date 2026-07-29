@@ -153,6 +153,13 @@ description: Сверить проект с ma-hub standards и подтянут
 - Отдельный revise только ради хуков/CI **не обязателен**, если следующий шаг — `/MA-deploy auto`
 - **Не** предлагать ослабить thin-состав или убрать локальный build — экономим форму (job’ы × события), не покрытие
 
+### Клиентский Telegram после прода — продукты с внешними заказчиками
+Сверить с `$MA_HUB_ROOT/templates/telegram-customer-update-ma-deploy.md` (+ snippet `templates/env-customer-telegram.snippet`):
+- в `.env.example` есть `COMPANY_TELEGRAM_CHAT_ID`, `COMPANY_TELEGRAM_THREAD_ID_UPDATES` (без секретов)
+- в `.env.local` заполнены `COMPANY_*` для топика **Updates** (не ops-алерты)
+- общий бот: `MA_TELEGRAM_BOT_TOKEN` в `~/.config/ma-hub/telegram.env` на машине (не в git продукта)
+- нет chat id — замечание (не блокер релиза): Phase 7.5 пропустит с ⚠️
+
 ### План подтягивания
 Пошагово, пакетами. Safe = пауза после каждого пакета. Auto = чекпоинты без лишних вопросов.  
 Первый пакет желательно: **визитка + дедуп** (после «ок»), потом UI/инженерия; хуки и CI — отдельный маленький пакет, если тяжёлые/дорогие.
