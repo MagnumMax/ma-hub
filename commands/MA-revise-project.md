@@ -158,7 +158,7 @@ description: Сверить проект с ma-hub standards и подтянут
 - в `.env.example` есть `COMPANY_TELEGRAM_CHAT_ID`, `COMPANY_TELEGRAM_THREAD_ID_UPDATES` (без секретов)
 - в `.env.local` заполнены `COMPANY_*` для топика **Updates** (не ops-алерты)
 - общий бот: `MA_TELEGRAM_BOT_TOKEN` в `~/.config/ma-hub/telegram.env` на машине (не в git продукта)
-- нет chat id при revise — замечание + напомнить, что `/MA-deploy` Phase 7.5 **остановится** и попросит добавить ключи (тихий skip запрещён)
+- нет chat id при revise — замечание: при выборе «да, уведомить клиента» `/MA-deploy` Phase 7.5 попросит добавить ключи; при «нет (только техника)» ключи не требуются
 
 ### План подтягивания
 Пошагово, пакетами. Safe = пауза после каждого пакета. Auto = чекпоинты без лишних вопросов.  
