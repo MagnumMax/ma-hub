@@ -55,30 +55,49 @@ COMPANY_TELEGRAM_THREAD_ID_UPDATES=…
 **Язык по умолчанию: English** (если в Local deviations продукта не указано иное).  
 Разметка для Telegram: **HTML** (`parse_mode=HTML` в скрипте отправки).
 
+**Главное:** сообщение читают **с первого взгляда**. Каждая строка — минимум слов. Цель: примерно **в 2 раза короче**, чем «полная» деловая фраза. Если можно убрать половину слов без потери смысла — убрать.
+
 Эталон (как уходит в чат):
 
 ```html
-<b>#55 Update, 30 July 2026</b>
+<b>#13 Update, 30 July 2026</b>
 
-<b>Admin → Google reviews sync:</b> Maps links without a map viewport are rewritten so ratings and review counts can load.
+<b>Reports → Project status:</b> Finished when market sources confirm, even if registry lags.
 
-<b>Ops → Reviews sync:</b> optional branch filter for targeted sync runs.
+<b>Reports → Client sharing:</b> No login; recipients see only shared report content.
+
+<b>Platform → Collections:</b> Removed; share individual report links only.
+
+<b>Reports → Fair price:</b> Clearer reason when fair value cannot be shown.
 ```
 
 Правила:
-- Заголовок **всегда жирный**: `<b>#{N} Update, {D Month YYYY}</b>` — номер выката (= номер merged PR `dev→main`, **без** слова PR). Пример: `<b>#55 Update, 30 July 2026</b>`.
-- Каждый пункт: **жирная зона+подзона** до двоеточия включительно, затем обычный факт:  
-  `<b>{Zone} → {Sub-area}:</b> {fact}`  
-  Пример: `<b>Admin → Google reviews sync:</b> Maps links…`
-- **Между пунктами — пустая строка** (blank line). После заголовка тоже пустая строка перед первым пунктом.
+- Заголовок **всегда жирный**: `<b>#{N} Update, {D Month YYYY}</b>` — номер выката (= номер merged PR `dev→main`, **без** слова PR).
+- Каждый пункт: **жирная зона+подзона** до двоеточия: `<b>{Zone} → {Sub-area}:</b> {fact}`
+- **Между пунктами — пустая строка.** После заголовка — пустая строка перед первым пунктом.
+- **Длина факта:** ориентир **≤ ~12–15 слов** (лучше меньше). Без вводных («When…», «can show as…», «focuses on…»), без повторов зоны в факте.
+- Сжимать агрессивно: суть + одно уточнение максимум. Длинные объяснения «почему/как» — выкинуть или в одно короткое придаточное.
 - Без нумерации `1. 2. 3.`
-- **Zone** = поверхность (`QR menu`, `Admin`, `Pulse`, `Ops`, …). **Sub-area** = блок (`Recommendations list`, `Google reviews sync`, …).
-- Формулировка короткая. До **10** пунктов. Без file paths, API, commit SHA, слов PR/CI в тексте для клиента.
-- В фактах экранировать HTML при необходимости: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`.
+- **Zone** / **Sub-area** — короткие ярлыки (`Reports`, `Project status`, …).
+- До **10** пунктов. Без file paths, API, commit SHA, слов PR/CI.
+- В фактах экранировать HTML: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`.
 - Не включать внутренние рефакторинги / CI / зависимости без пользы для клиента.
-- В конце черновика для пользователя (в чат Cursor): «Send to client? **send** / edits: … / **don't send**» (можно: **отправить** / правки / **не слать**).
+- Перед показом пользователю: **перечитать и укоротить ещё раз**, если строка длиннее одной короткой мысли.
+- В конце черновика для пользователя: «Send to client? **send** / edits: … / **don't send**» (можно: **отправить** / правки / **не слать**).
 
-Антипример: без `<b>`, без пустых строк между пунктами, слово **PR**, нумерация, длинные объяснения.
+Антипример (слишком длинно — так **не** писать):
+
+```text
+Reports → Project status: Completed projects can show as Finished when trusted market sources confirm it, even if official registry data is still catching up.
+```
+
+Хороший сжатый вариант того же смысла:
+
+```text
+Reports → Project status: Finished when market sources confirm, even if registry lags.
+```
+
+Антипример ещё: без `<b>`, без пустых строк, слово **PR**, нумерация.
 
 ## Откуда брать содержание
 
