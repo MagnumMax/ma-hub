@@ -52,38 +52,33 @@ COMPANY_TELEGRAM_THREAD_ID_UPDATES=…
 
 ## Формат сообщения (черновик)
 
-**Язык по умолчанию: English** (если в Local deviations продукта не указано иное).
+**Язык по умолчанию: English** (если в Local deviations продукта не указано иное).  
+Разметка для Telegram: **HTML** (`parse_mode=HTML` в скрипте отправки).
 
-Эталон:
+Эталон (как уходит в чат):
 
-```text
-#{N} Update, {D Month YYYY}
+```html
+<b>#55 Update, 30 July 2026</b>
 
-{Zone} → {Sub-area}: {what changed}.
-{Zone} → {Sub-area}: {what changed}.
+<b>Admin → Google reviews sync:</b> Maps links without a map viewport are rewritten so ratings and review counts can load.
+
+<b>Ops → Reviews sync:</b> optional branch filter for targeted sync runs.
 ```
 
 Правила:
-- Заголовок одной строкой: **`#{номер} Update, {дата}`** — номер выката (= номер merged PR `dev→main`, **без** слова PR); дата словами на английском. Пример: `#54 Update, 29 July 2026`. Имя продукта в заголовке не обязательно, если чат/топик уже привязан к одному продукту; иначе можно префикс продукта в Local deviations.
-- Каждый пункт — **одна строка**: `{Zone} → {Sub-area}: {fact}`. Без нумерации `1. 2. 3.`
-- **Zone** = поверхность продукта (`QR menu`, `Admin`, `Pulse`, …). **Sub-area** = конкретный блок (`Recommendations list`, `My selection`, `Product card`, …).
-- Формулировка короткая: «added a check…», «items stay saved…», «shows a warning…», «spacing tightened» — не длинный рассказ.
-- До **10** строк. Без file paths, API, commit SHA, слов вроде PR/CI в тексте для клиента.
-- Не включать внутренние рефакторинги, CI, зависимости — только то, что клиент заметит или о чём полезно знать.
-- В конце черновика для пользователя (в чат Cursor): «Send to client? **send** / edits: … / **don't send**» (можно по-русски: **отправить** / правки / **не слать**).
+- Заголовок **всегда жирный**: `<b>#{N} Update, {D Month YYYY}</b>` — номер выката (= номер merged PR `dev→main`, **без** слова PR). Пример: `<b>#55 Update, 30 July 2026</b>`.
+- Каждый пункт: **жирная зона+подзона** до двоеточия включительно, затем обычный факт:  
+  `<b>{Zone} → {Sub-area}:</b> {fact}`  
+  Пример: `<b>Admin → Google reviews sync:</b> Maps links…`
+- **Между пунктами — пустая строка** (blank line). После заголовка тоже пустая строка перед первым пунктом.
+- Без нумерации `1. 2. 3.`
+- **Zone** = поверхность (`QR menu`, `Admin`, `Pulse`, `Ops`, …). **Sub-area** = блок (`Recommendations list`, `Google reviews sync`, …).
+- Формулировка короткая. До **10** пунктов. Без file paths, API, commit SHA, слов PR/CI в тексте для клиента.
+- В фактах экранировать HTML при необходимости: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`.
+- Не включать внутренние рефакторинги / CI / зависимости без пользы для клиента.
+- В конце черновика для пользователя (в чат Cursor): «Send to client? **send** / edits: … / **don't send**» (можно: **отправить** / правки / **не слать**).
 
-Пример (хороший):
-
-```text
-#54 Update, 29 July 2026
-
-QR menu → Recommendations list: added a check that a guest category exists.
-QR menu → My selection: selected items stay saved even if the guest leaves the menu and comes back.
-Admin → Product card: shows a warning when a recommendation exists but the guest category is missing.
-Pulse → Dashboard: spacing tightened.
-```
-
-Антипример: нумерация, «What changed:», только зона без подзоны, длинные объяснения, слово **PR** в заголовке, русский по умолчанию без Local deviation.
+Антипример: без `<b>`, без пустых строк между пунктами, слово **PR**, нумерация, длинные объяснения.
 
 ## Откуда брать содержание
 

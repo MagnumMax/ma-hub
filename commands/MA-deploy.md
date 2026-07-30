@@ -223,7 +223,7 @@ Skip при `check-only` / `skip-merge`. Эталон: `$MA_HUB_ROOT/templates/t
 
 ### 7.5b — Черновик и отправка (только если «да» и ключи ок)
 
-5. Собрать изменения релиза → черновик по эталону `$MA_HUB_ROOT/templates/telegram-customer-update-ma-deploy.md`: **English** (если Local deviations не говорят иначе); заголовок `#{N} Update, {date}` (**без** слова PR); строки `{Zone} → {Sub-area}: {fact}`; до 10 строк; без путей/SHA в теле. Если нечего сказать клиенту — предложить «нет (только техника)».
+5. Собрать изменения релиза → черновик по эталону `$MA_HUB_ROOT/templates/telegram-customer-update-ma-deploy.md`: **English**; HTML: заголовок `<b>#{N} Update, {date}</b>`; пункты `<b>{Zone} → {Sub-area}:</b> {fact}` с **пустой строкой между пунктами**; без слова PR. Если нечего сказать клиенту — предложить «нет (только техника)».
 6. Показать черновик. **Пауза:** «Send to client? **send** / edits: … / **don't send**» (в чате с пользователем можно по-русски: **отправить** / правки / **не слать**).
 7. После «отправить»/«send»: `"$MA_HUB_ROOT/bootstrap/telegram-customer-update-send.sh"` (stdin или `--file`). Не печатать токен. Ошибка API → сообщить, не откатывать прод.
 

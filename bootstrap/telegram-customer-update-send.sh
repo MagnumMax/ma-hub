@@ -68,6 +68,7 @@ import json, os
 payload = {
     "chat_id": os.environ["CHAT_ID"],
     "text": os.environ["MESSAGE"],
+    "parse_mode": "HTML",
     "disable_web_page_preview": True,
 }
 thread = os.environ.get("THREAD_ID", "").strip()
