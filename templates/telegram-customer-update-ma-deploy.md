@@ -58,11 +58,11 @@ COMPANY_TELEGRAM_THREAD_ID_UPDATES=…
 **Стиль: Slack / GitHub Changelog** — только секции и короткие буллеты.  
 **Без** наших ярлыков `Zone → Sub-area`. Без нумерации `1. 2. 3.`
 
-**Главное:** читают с первого взгляда. Каждый буллет — одна короткая мысль.
+**Главное:** полезное покрытие важнее «сжать до короткого списка». Каждый буллет — одна пользовательская мысль, но **разные фичи не склеивать** в один пункт ради краткости.
 
 ### Единый тон для всех продуктов
 
-Один и тот же голос для Fleet, Roasters, PropStat и любых новых продуктов. Меняется только предмет (машины / кофе / отчёты), не структура и не длина.
+Один и тот же голос для Fleet, Roasters, PropStat и любых новых продуктов. Меняется только предмет (машины / кофе / отчёты), не структура.
 
 | Держать | Не делать |
 |---------|-----------|
@@ -70,27 +70,38 @@ COMPANY_TELEGRAM_THREAD_ID_UPDATES=…
 | `•` + короткий факт на English | `Zone → Sub-area:`, нумерация, слово PR |
 | Benefit-first («Clearer…», «Faster…») | Язык коммитов, путей, CI, doctor, i18n |
 | Буллеты подряд; пустая строка только между секциями | Пустая строка после каждого пункта |
-| Важное включать; длинное — сжать, не выкинуть смысл | Жёсткий лимит «не больше 6» |
+| Все заметные для клиента изменения — отдельными буллетами | Жёсткий лимит «не больше 6»; схлопывание 3 фич в 1 строку |
+| Скан **всего** релиза (PR + diff + файлы), не только subject коммитов | Слепо копировать `git log` или писать только то, что уместилось в commit message |
 
-Хорошо (любой продукт): `• Clearer status on the project list`  
-Плохо: `Reports → Status: When trusted sources confirm…` / эссе на 2 строки / список chore.
+Хорошо: отдельные буллеты на statement PDF, branding settings и identity country — если клиент это увидит.  
+Плохо: один буллет «Customer profile improvements» вместо трёх разных фич; `Reports → Status: …`; эссе на 2 строки; список chore.
 
 Local deviations в `docs/MA-STANDARDS.md` продукта — **только** язык или особый чат, не другой формат секций.
 
-Эталон (как уходит в чат):
+Эталон (как уходит в чат) — **полное полезное покрытие**, не урезанный «топ-6»:
 
 ```html
 <b>#47 Update, 31 July 2026</b>
 
 <b>What's New</b>
-• Vehicle Role and State on list and profile
-• Customer profile with SOA, charges, and block-edit
-• Shared branded PDF layout (including SOA)
+• Vehicle Role and State on lists, profiles, and calendar
+• Customer profile with statement of account and open charges
+• Inline block-edit for customer cards without full-page edit
+• Shared branded PDF layout for invoices, contracts, and reservations
+• Downloadable customer statement PDF
+• Company branding settings for PDF letterhead
+• Country of issue on customer identity documents
+• Vehicle charges tab (fines and tolls in one place)
 
 <b>Improvements</b>
-• Clearer reservation summaries and calendar status
-• More reliable login into the right workspace
-• Vehicle charges tabs reorganized (fines with charges)
+• Clearer reservation form summary and kanban cards
+• Vehicle list badges and readiness aligned with Role/State
+• Customer money strip and finance tabs reorganized
+• Breadcrumbs and sidebar grouping for vehicle and customer pages
+• Faster load on vehicles, reservations, catalog, and marketing
+
+<b>Fixes</b>
+• More reliable login handoff into the correct workspace
 ```
 
 Правила:
@@ -100,20 +111,29 @@ Local deviations в `docs/MA-STANDARDS.md` продукта — **только**
   - **Improvements** — удобнее / понятнее / надёжнее
   - **Fixes** — только явные пользовательские багфиксы (иначе секцию не добавлять)
 - Под секцией: строки `• {short fact}` подряд — **без** `Zone → Sub-area`, **без пустых строк между буллетами**.
-- Пустая строка: после заголовка релиза; **между секциями** (What's New → Improvements). Не между каждым `•`.
-- Длина буллета: ориентир **≤ ~12 слов**, benefit-first, не язык коммитов.
-- **Число пунктов не резать искусственно до 6.** Если важно для клиента — включать (ориентир комфорта ~8–15; выше — только если реально нужно, иначе сжать формулировки, не выкидывать смысл).
-- Техника (doctor, i18n-regen, docs-only, bundle, внутренние миграции без UX) → отсев; при согласовании показать `N commits → M bullets` + отсев.
+- Пустая строка: после заголовка релиза; **между секциями**. Не между каждым `•`.
+- Длина буллета: ориентир **≤ ~14 слов**, benefit-first, не язык коммитов. Короче — хорошо; **короче ценой потери отдельной фичи — плохо**.
+- **Не ужимать агрессивно.** Одна заметная для клиента возможность = обычно **один буллет**. Не склеивать независимые фичи («profile + PDF + branding») в одну строку.
+- Число пунктов: ориентир комфорта ~8–15; **больше — нормально**, если всё полезно клиенту. Искусственный потолок «6» **запрещён**.
+- Техника (doctor, i18n-regen, docs-only, bundle, внутренние миграции без UX) → отсев; при согласовании показать `N commits / changed areas → M bullets` + что отсеяли и почему.
 - Экранировать HTML в тексте: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`.
 - В конце: «Send to client? **send** / edits: … / **don't send**» (можно: **отправить** / правки / **не слать**).
 
-Антипример: `Vehicles → Status: …`; пустая строка после каждого буллета; эссе Notion; список всех chore-коммитов.
+Антипример: «топ-6» при богатом релизе; `Vehicles → Status: …`; пустая строка после каждого буллета; эссе Notion; список всех chore-коммитов.
 
 ## Откуда брать содержание
 
-1. Коммиты / описание merged PR `dev→main` с прошлого уведомления или с предыдущего merge на `main`…`HEAD`.
-2. Разложить по **What's New / Improvements / Fixes**; переписать в короткий English без Zone→Sub-area.
-3. Если нечего сказать клиенту → «нет (только техника)» или «don't send».
+**Не опираться только на subject коммитов** — в них часто нет полного UX-смысла.
+
+1. Диапазон релиза: merged PR `dev→main` (или `main…HEAD` с прошлого клиентского апдейта).
+2. Собрать картину из **нескольких источников** (все доступные):
+   - тело / summary PR и checklist;
+   - список изменённых путей / краткий diff (экраны, API с UX-эффектом, PDF, настройки);
+   - коммиты — как подсказки, не как единственный список;
+   - при сомнении — открыть ключевые изменённые экраны/копирайт в коде.
+3. Выписать **все** пользовательски заметные изменения → разложить по What's New / Improvements / Fixes → English без Zone→Sub-area.
+4. Только после полного списка можно слегка сжать **формулировки** (не выкидывать целые фичи). Если после отсева техники осталось мало — ок; если много — оставлять много.
+5. Если нечего сказать клиенту → «нет (только техника)» или «don't send».
 
 ## Отправка
 
