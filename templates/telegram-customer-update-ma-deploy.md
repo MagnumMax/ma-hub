@@ -55,55 +55,65 @@ COMPANY_TELEGRAM_THREAD_ID_UPDATES=…
 **Язык по умолчанию: English** (если в Local deviations продукта не указано иное).  
 Разметка для Telegram: **HTML** (`parse_mode=HTML` в скрипте отправки).
 
-**Главное:** сообщение читают **с первого взгляда**. Каждая строка — минимум слов. Цель: примерно **в 2 раза короче**, чем «полная» деловая фраза. Если можно убрать половину слов без потери смысла — убрать.
+**Стиль: Slack / GitHub Changelog** — только секции и короткие буллеты.  
+**Без** наших ярлыков `Zone → Sub-area`. Без нумерации `1. 2. 3.`
+
+**Главное:** читают с первого взгляда. Каждый буллет — одна короткая мысль.
+
+### Единый тон для всех продуктов
+
+Один и тот же голос для Fleet, Roasters, PropStat и любых новых продуктов. Меняется только предмет (машины / кофе / отчёты), не структура и не длина.
+
+| Держать | Не делать |
+|---------|-----------|
+| Секции What's New / Improvements / Fixes | Свои названия секций под продукт |
+| `•` + короткий факт на English | `Zone → Sub-area:`, нумерация, слово PR |
+| Benefit-first («Clearer…», «Faster…») | Язык коммитов, путей, CI, doctor, i18n |
+| Буллеты подряд; пустая строка только между секциями | Пустая строка после каждого пункта |
+| Важное включать; длинное — сжать, не выкинуть смысл | Жёсткий лимит «не больше 6» |
+
+Хорошо (любой продукт): `• Clearer status on the project list`  
+Плохо: `Reports → Status: When trusted sources confirm…` / эссе на 2 строки / список chore.
+
+Local deviations в `docs/MA-STANDARDS.md` продукта — **только** язык или особый чат, не другой формат секций.
 
 Эталон (как уходит в чат):
 
 ```html
-<b>#13 Update, 30 July 2026</b>
+<b>#47 Update, 31 July 2026</b>
 
-<b>Reports → Project status:</b> Finished when market sources confirm, even if registry lags.
+<b>What's New</b>
+• Vehicle Role and State on list and profile
+• Customer profile with SOA, charges, and block-edit
+• Shared branded PDF layout (including SOA)
 
-<b>Reports → Client sharing:</b> No login; recipients see only shared report content.
-
-<b>Platform → Collections:</b> Removed; share individual report links only.
-
-<b>Reports → Fair price:</b> Clearer reason when fair value cannot be shown.
+<b>Improvements</b>
+• Clearer reservation summaries and calendar status
+• More reliable login into the right workspace
+• Vehicle charges tabs reorganized (fines with charges)
 ```
 
 Правила:
-- Заголовок **всегда жирный**: `<b>#{N} Update, {D Month YYYY}</b>` — номер выката (= номер merged PR `dev→main`, **без** слова PR).
-- Каждый пункт: **жирная зона+подзона** до двоеточия: `<b>{Zone} → {Sub-area}:</b> {fact}`
-- **Между пунктами — пустая строка.** После заголовка — пустая строка перед первым пунктом.
-- **Длина факта:** ориентир **≤ ~12–15 слов** (лучше меньше). Без вводных («When…», «can show as…», «focuses on…»), без повторов зоны в факте.
-- Сжимать агрессивно: суть + одно уточнение максимум. Длинные объяснения «почему/как» — выкинуть или в одно короткое придаточное.
-- Без нумерации `1. 2. 3.`
-- **Zone** / **Sub-area** — короткие ярлыки (`Reports`, `Project status`, …).
-- До **10** пунктов. Без file paths, API, commit SHA, слов PR/CI.
-- В фактах экранировать HTML: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`.
-- Не включать внутренние рефакторинги / CI / зависимости без пользы для клиента.
-- Перед показом пользователю: **перечитать и укоротить ещё раз**, если строка длиннее одной короткой мысли.
-- В конце черновика для пользователя: «Send to client? **send** / edits: … / **don't send**» (можно: **отправить** / правки / **не слать**).
+- Заголовок **жирный**: `<b>#{N} Update, {D Month YYYY}</b>` (**без** слова PR).
+- Секции **жирные** (пустые не показывать):
+  - **What's New** — новое для пользователя
+  - **Improvements** — удобнее / понятнее / надёжнее
+  - **Fixes** — только явные пользовательские багфиксы (иначе секцию не добавлять)
+- Под секцией: строки `• {short fact}` подряд — **без** `Zone → Sub-area`, **без пустых строк между буллетами**.
+- Пустая строка: после заголовка релиза; **между секциями** (What's New → Improvements). Не между каждым `•`.
+- Длина буллета: ориентир **≤ ~12 слов**, benefit-first, не язык коммитов.
+- **Число пунктов не резать искусственно до 6.** Если важно для клиента — включать (ориентир комфорта ~8–15; выше — только если реально нужно, иначе сжать формулировки, не выкидывать смысл).
+- Техника (doctor, i18n-regen, docs-only, bundle, внутренние миграции без UX) → отсев; при согласовании показать `N commits → M bullets` + отсев.
+- Экранировать HTML в тексте: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`.
+- В конце: «Send to client? **send** / edits: … / **don't send**» (можно: **отправить** / правки / **не слать**).
 
-Антипример (слишком длинно — так **не** писать):
-
-```text
-Reports → Project status: Completed projects can show as Finished when trusted market sources confirm it, even if official registry data is still catching up.
-```
-
-Хороший сжатый вариант того же смысла:
-
-```text
-Reports → Project status: Finished when market sources confirm, even if registry lags.
-```
-
-Антипример ещё: без `<b>`, без пустых строк, слово **PR**, нумерация.
+Антипример: `Vehicles → Status: …`; пустая строка после каждого буллета; эссе Notion; список всех chore-коммитов.
 
 ## Откуда брать содержание
 
 1. Коммиты / описание merged PR `dev→main` с прошлого уведомления или с предыдущего merge на `main`…`HEAD`.
-2. Переписать агентом в клиентский язык (Zone → Sub-area, не файлы); текст апдейта — **English** по умолчанию.
-3. Если нечего сказать клиенту (только внутренняя чистка) → предложить «нет (только техника)» или «don't send».
+2. Разложить по **What's New / Improvements / Fixes**; переписать в короткий English без Zone→Sub-area.
+3. Если нечего сказать клиенту → «нет (только техника)» или «don't send».
 
 ## Отправка
 
