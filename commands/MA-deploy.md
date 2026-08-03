@@ -46,18 +46,19 @@ argument-hint: [auto | check-only | skip-merge]
 Аргументы (порядок не важен):
 - пусто — полный цикл до prod, **safe**
 - `auto` — полный цикл с автопочинкой
-- `check-only` — Phase 1–3.5 + 3.9, без push/CI/PR/prod
+- `check-only` — Phase 1–3.5 + 3.8 + 3.9, без push/CI/PR/prod
 - `skip-merge` — до Phase 5 (push + CI), без merge и Vercel prod
 
 ## Pipeline
 
 ```
 0 → 1 (ревью ‖ проверки) → 2 (react-doctor) → 3 (disk/build/budget)
-  → 3.5 (supabase если нужно) → 3.9 (атомарные commits) → 3.95 (main → dev)
-  → 4 (один push dev) → 5 (CI typecheck+test) → 6 (PR → merge) → 7 (Vercel + smoke) → 7.5 (черновик ТГ + вопрос → send)
+  → 3.5 (supabase если нужно) → 3.8 (уборка до commits) → 3.9 (атомарные commits) → 3.95 (main → dev)
+  → 4 (один push dev) → 5 (CI typecheck+test) → 6 (PR → merge) → 7 (Vercel + smoke)
+  → 7.5 (черновик ТГ + вопрос → send) → 7.6 (уборка хвоста прогона) → Отчёт
 ```
 
-Локально перед push: 1–3.5 → **3.9** → **3.95** → 4. `pnpm build` = эмуляция Vercel; Preview на `dev` **не** ждём.
+Локально перед push: 1–3.5 → **3.8** → **3.9** → **3.95** → 4. `pnpm build` = эмуляция Vercel; Preview на `dev` **не** ждём.
 
 **Анти-повторы (закон):** один полный suite в Phase 1 + один CI после push + один Vercel prod. Полный test на каждый commit 3.9 — **запрещён**. Конфликты снимать в 3.95 **до** PR. Перед build — место на диске / очистка `.next`. `--no-verify` не дефолт. Эталон хуков: `$MA_HUB_ROOT/templates/git-hooks-ma-deploy.md`. Эталон CI: `$MA_HUB_ROOT/templates/ci-ma-deploy.md` (минуты = job’ы × запуски на коммит).
 
@@ -70,14 +71,16 @@ argument-hint: [auto | check-only | skip-merge]
 | react-doctor | 2 | skill `react-doctor` |
 | build + bundle-budget | 3 | `pnpm build`, `pnpm check:bundle-budget` |
 | supabase | 3.5 | MCP/CLI если diff |
+| Уборка мусора (до commits) | 3.8 | эталон `templates/cleanup-ma-deploy.md` |
 | Vercel prod + smoke | 7 | Vercel MCP + `agent-browser` |
 | Клиентский апдейт в Telegram | 7.5 | эталон `templates/telegram-customer-update-ma-deploy.md` + `bootstrap/telegram-customer-update-send.sh` |
+| Уборка мусора (хвост прогона) | 7.6 | тот же эталон `templates/cleanup-ma-deploy.md` |
 
 ## Жёсткие законы
 
 1. **Ветки:** только `dev` → PR → `main`. Нет `dev` — создай от `main` до Phase 4.
 2. **Merge:** только `gh pr merge --merge`. Squash/rebase **запрещены**.
-3. **Commits только в конце локального цикла:** 1–3.5 по dirty tree; фиксы копятся без commit; после зелёных 1–3.5 → 3.9 сам (без «ок?» по коммитам) → 3.95 → один push.
+3. **Commits только в конце локального цикла:** 1–3.5 по dirty tree; фиксы копятся без commit; после зелёных 1–3.5 → **3.8** (уборка) → 3.9 сам (без «ок?» по коммитам) → 3.95 → один push.
 4. **Полный test** — один раз в Phase 1 (+ thin CI). Тяжёлые хуки / дорогой CI (много job’ов, дубль PR) = блокер Phase 0.
 5. **3.95 обязателен** до push и до PR. Конфликт «всплыл на PR» = ошибка процесса.
 6. **React Doctor:** `npx react-doctor@latest --verbose --scope changed --blocking error`; baseline `.react-doctor/baseline.json`; monorepo — из React-корня.
@@ -141,18 +144,42 @@ Loop: auto fix в дереве / safe стоп. После успеха — об
 1. `pnpm build` — обязателен до 3.9/push. Fail → не push; auto fix в дереве.
 2. `pnpm check:bundle-budget` если есть; fail auto → `performance-optimizer` → fix без commit.
 
-**Gate:** build + budget OK → 3.5 или сразу 3.9.
+**Gate:** build + budget OK → 3.5 или сразу **3.8**.
 
 ## Phase 3.5 — Supabase
 
 Skip если `HAS_SUPABASE=no` или в diff vs `main` нет `supabase/migrations|functions`.  
 Если есть: проверить готовность прода / план выката. Safe — стоп без плана; auto — безопасный выкат по стандарту проекта (без секретов в чат). Иначе блокер.
 
-**Gate:** OK/skip → **3.9** → **3.95** → 4.
+**Gate:** OK/skip → **3.8** → **3.9** → **3.95** → 4.
+
+## Phase 3.8 — Уборка мусора до упаковки
+
+Обязательна перед 3.9 (в т.ч. при `check-only`). Эталон: `$MA_HUB_ROOT/templates/cleanup-ma-deploy.md`.  
+Тихий skip без скана **запрещён**.
+
+**Зачем:** старый мусор и файлы похожие на ключи **не тащить** в релиз рядом с commits/push. Агент сам инициирует — пользователь не должен писать «удали мусор».
+
+1. Скан корня: `.impeccable/`, `tmp/`, кэши тестов/e2e, скриншоты, leftover-логи, `*api-key*` и т.п. Агент сам решает, что мусор; акцент на **секреты** и leftover прошлых сессий. Local deviations.
+2. Класс: **safe junk** / **secret-looking** / **ask**. Размер примерно. Содержимое секретов **не** печатать.
+3. Пусто → «мусора не нашёл» → 3.9.
+
+### safe (и без `auto`)
+
+4. Список + рекомендация + **A / B / C** (или «ничего»). Удалять только после ответа.
+
+### auto
+
+4. **Safe junk** — удалить без спроса; перечислить «уже удалил: …».  
+5. **Secret-looking** / **Ask** — всегда спросить (A/B/C).
+
+**Не трогать** без явного «да»: `.env` / `.env.local`, `node_modules/`, `.git/`, исходники в git. `.next`/`.turbo` — не здесь (Phase 3).
+
+**Gate:** скан + (чисто | удалено по режиму | ответ на A/B/C) → **3.9**.
 
 ## Phase 3.9 — Атомарная упаковка
 
-Когда 1–3.5 зелёные. Агент **сам**, без спроса. При `check-only` — в конце успеха.
+Когда 1–3.5 зелёные **и 3.8 закрыта**. Агент **сам**, без спроса. При `check-only` — в конце успеха (после 3.8).
 
 ```bash
 export MA_ATOMIC_PACKING=1   # на всю серию commits
@@ -239,7 +266,22 @@ Skip при `check-only` / `skip-merge`. Эталон: `$MA_HUB_ROOT/templates/t
    При правках — обновить текст, **снова показать полный черновик**, снова пауза.  
 7. После «отправить»/«send»: `"$MA_HUB_ROOT/bootstrap/telegram-customer-update-send.sh"` (stdin или `--file`). Не печатать токен. Ошибка API → сообщить, не откатывать прод.
 
-**Gate:** ответ на 7.5-0 (с видимым черновиком или явным «нечего сказать») + (пропуск | отправлено | «не слать») → Отчёт.
+**Gate:** ответ на 7.5-0 (с видимым черновиком или явным «нечего сказать») + (пропуск | отправлено | «не слать») → **Phase 7.6**.
+
+## Phase 7.6 — Уборка мусора после релиза (хвост прогона)
+
+Skip при `check-only` / `skip-merge`. Эталон: `$MA_HUB_ROOT/templates/cleanup-ma-deploy.md`.  
+После закрытия 7.5. Прод **не** откатывать. Тихий skip без скана **запрещён**.
+
+**Зачем:** мусор, появившийся **в этом** прогоне после 3.8 (smoke PDF, скрины, новые логи). Не дублировать длинно то, что уже закрыли в 3.8, если нового нет.
+
+1. Скан с акцентом на артефакты **после** 3.8. Класс: safe junk / secret-looking / ask.
+2. Пусто / «нового мусора нет» → Отчёт.
+3. Правила удаления — как в 3.8: **safe** всегда A/B/C; **auto** — safe junk сразу, секреты/ask — спрос.
+
+**Не трогать** без явного «да»: `.env` / `.env.local`, `node_modules/`, `.git/`, исходники в git. `.next`/`.turbo` по умолчанию не чистить.
+
+**Gate:** скан + (нечего | удалено по режиму | ответ на A/B/C) → Отчёт.
 
 ## Отчёт
 
@@ -250,16 +292,17 @@ Skip при `check-only` / `skip-merge`. Эталон: `$MA_HUB_ROOT/templates/t
 | # | Содержание |
 |---|------------|
 | 0 | План проекта + `CI_JOBS_TO_WAIT` / thin+cheap|thick|expensive / hooks light|heavy / `HAS_SUPABASE` / disk |
-| 1 | Сводка простым языком: этап, safe/auto, блокеры?, commits, PR, merge, Vercel, smoke, ponytail, Telegram клиенту |
-| 2 | Шаги 1–3.5 / 3.9 / 3.95 — результат |
+| 1 | Сводка простым языком: этап, safe/auto, блокеры?, commits, PR, merge, Vercel, smoke, ponytail, Telegram клиенту, уборка мусора |
+| 2 | Шаги 1–3.5 / 3.8 / 3.9 / 3.95 — результат |
 | 2b | Ponytail findings + `net` (если были) |
 | 3 | React Doctor baseline → score/errors |
 | 4 | Атомарные commits (SHA + сообщение) |
 | 5 | Phase 4–7 статусы + ссылки |
 | 5b | Phase 7.5: черновик показан? / слать клиенту? / ключи? / текст согласован? / отправлено / пропуск |
+| 5c | Phase 3.8 + 7.6: скан / найдено / удалено / ждём A/B/C / мусора не было |
 | 6 | Блокеры (только если есть) |
 
-**Этап работы** (одна фраза): проверки без упаковки / жду решения / упаковываю / main→dev / выкладываю / жду CI / жду Vercel / жду решение по Telegram / жду ключи Telegram / согласование текста клиенту / готово на проде / только проверки.
+**Этап работы** (одна фраза): проверки без упаковки / жду решения / уборка мусора до commits / жду что удалить / упаковываю / main→dev / выкладываю / жду CI / жду Vercel / жду решение по Telegram / жду ключи Telegram / согласование текста клиенту / уборка хвоста / готово на проде / только проверки.
 
 В **safe** при стопе — Таблица 6 + строка: нужны решения по блокерам («чини» / «не чинить» / «отложить»); ночной прогон — `/MA-deploy auto`.
 
@@ -291,3 +334,4 @@ Skip при `check-only` / `skip-merge`. Эталон: `$MA_HUB_ROOT/templates/t
 | 6 stuck | `babysit` |
 | 7 | Vercel MCP + `vercel-cli` / `deployments-cicd`; smoke B → `agent-browser` |
 | 7.5 | черновик (полный текст) + «слать?» → (если да) ключи → снова полный текст + «отправить» → `bootstrap/telegram-customer-update-send.sh` |
+| 3.8 / 7.6 | скан мусора (до commits + хвост) → safe: A/B/C · auto: safe junk сразу, секреты/ask спросить → `templates/cleanup-ma-deploy.md` |
