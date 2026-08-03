@@ -27,20 +27,29 @@ chmod +x "${ROOT}/bootstrap/"*.sh
 source "${ROOT}/bootstrap/stamp.sh"
 ma_hub_write_stamp "$ROOT"
 
-# Convenience symlinks in ~/bin if present or creatable
+# Convenience wrappers in ~/bin (not raw symlinks: scripts resolve ROOT via $0,
+# so a symlink from ~/bin would make ROOT=$HOME and break).
 BIN_DIR="${HOME}/bin"
 mkdir -p "$BIN_DIR"
-ln -sfn "${ROOT}/bootstrap/pull.sh" "${BIN_DIR}/ma-hub-pull"
-ln -sfn "${ROOT}/bootstrap/ensure-latest.sh" "${BIN_DIR}/ma-hub-ensure-latest"
-ln -sfn "${ROOT}/bootstrap/cloud-ensure.sh" "${BIN_DIR}/ma-hub-cloud-ensure"
-ln -sfn "${ROOT}/bootstrap/bootstrap.sh" "${BIN_DIR}/ma-hub-bootstrap"
-ln -sfn "${ROOT}/bootstrap/install-commands.sh" "${BIN_DIR}/ma-hub-install-commands"
-ln -sfn "${ROOT}/bootstrap/install-skills.sh" "${BIN_DIR}/ma-hub-install-skills"
-ln -sfn "${ROOT}/bootstrap/install-external-skills.sh" "${BIN_DIR}/ma-hub-install-external-skills"
-ln -sfn "${ROOT}/bootstrap/check-local-drift.sh" "${BIN_DIR}/ma-hub-check-drift"
-ln -sfn "${ROOT}/bootstrap/install-launch-agent.sh" "${BIN_DIR}/ma-hub-install-launch-agent"
-ln -sfn "${ROOT}/bootstrap/install-session-hook.sh" "${BIN_DIR}/ma-hub-install-session-hook"
-echo "Symlinks: ma-hub-pull, ma-hub-ensure-latest, ma-hub-cloud-ensure, ma-hub-bootstrap, … → ${BIN_DIR}"
+ma_hub_install_bin_wrapper() {
+  local name="$1" script="$2"
+  cat >"${BIN_DIR}/${name}" <<EOF
+#!/usr/bin/env bash
+exec "${ROOT}/bootstrap/${script}" "\$@"
+EOF
+  chmod +x "${BIN_DIR}/${name}"
+}
+ma_hub_install_bin_wrapper ma-hub-pull pull.sh
+ma_hub_install_bin_wrapper ma-hub-ensure-latest ensure-latest.sh
+ma_hub_install_bin_wrapper ma-hub-cloud-ensure cloud-ensure.sh
+ma_hub_install_bin_wrapper ma-hub-bootstrap bootstrap.sh
+ma_hub_install_bin_wrapper ma-hub-install-commands install-commands.sh
+ma_hub_install_bin_wrapper ma-hub-install-skills install-skills.sh
+ma_hub_install_bin_wrapper ma-hub-install-external-skills install-external-skills.sh
+ma_hub_install_bin_wrapper ma-hub-check-drift check-local-drift.sh
+ma_hub_install_bin_wrapper ma-hub-install-launch-agent install-launch-agent.sh
+ma_hub_install_bin_wrapper ma-hub-install-session-hook install-session-hook.sh
+echo "Wrappers: ma-hub-pull, ma-hub-ensure-latest, ma-hub-cloud-ensure, ma-hub-bootstrap, … → ${BIN_DIR}"
 
 # Daily auto-sync + soft session refresh (macOS / local Cursor)
 "${ROOT}/bootstrap/install-launch-agent.sh" || echo "WARN: launch agent not installed"
