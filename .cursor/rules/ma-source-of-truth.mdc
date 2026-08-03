@@ -12,4 +12,5 @@ When editing Monster Automation assets in this repo or advising about `/MA-*`:
 3. **External skills:** only links in `registry/external-skills.*` — never vendor skill body text into the hub; agents must `Read` local `SKILL.md` at runtime
 4. After edits: run `bootstrap/install-commands.sh` and `bootstrap/install-skills.sh`, then `bootstrap/check-local-drift.sh` (and `install-external-skills.sh` if the registry changed)
 5. Remind the user that **commit + push** of ma-hub is required for other projects/machines to receive changes (do not commit unless asked — but always state that push is pending)
-6. Full checklist: `docs/hub-maintenance.md`
+6. **Skills vs projects:** skill inventory lives only in the hub. Do **not** copy skill lists into product repos. After hub skill/registry changes, refresh the machine cache so every linked project sees the same set; on `/MA-revise-project`, verify that cache (propose `ma-hub-ensure-latest` / `install-external-skills.sh` if gaps)
+7. Full checklist: `docs/hub-maintenance.md`

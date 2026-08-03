@@ -54,3 +54,5 @@ ma-hub-install-session-hook
 Бэкап: `docs/user-rules.md`. После смены правил — обновите Settings и этот файл в хабе.
 
 Команды `/MA-*`, MA-skills и `standards/` — да, едут через ensure-latest / cloud-ensure.
+
+**Внешние skills** (реестр `registry/external-skills.*`) — не всегда в том же проходе: после смены registry нужен `install-external-skills.sh` (или weekly). Список skills не дублируется в продуктах; проекты получают набор через кэш машины. Подробнее: `docs/hub-maintenance.md` → «Skills и проекты».

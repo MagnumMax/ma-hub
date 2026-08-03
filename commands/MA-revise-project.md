@@ -19,6 +19,16 @@ description: Сверить проект с ma-hub standards и подтянут
 `ma-hub-pull` или `$MA_HUB_ROOT/bootstrap/pull.sh`  
 (если в `docs/MA-STANDARDS.md` проекта указан **Pin** — уважать pin / `MA_HUB_REF`).
 
+### Skills с хаба (обязательно при revise)
+
+Список skills **не** копируется в продукт — он общий, из ma-hub. После обновления хаба машина должна иметь актуальный кэш:
+
+1. MA-owned: `$MA_HUB_ROOT/bootstrap/install-skills.sh` (или уже через `ma-hub-ensure-latest` / `ma-hub-pull`)
+2. Внешние по registry: `$MA_HUB_ROOT/bootstrap/install-external-skills.sh` — если менялся `registry/external-skills.*` или локально нет skills, на которые ссылаются `/MA-*` (см. `$MA_HUB_ROOT/registry/external-skills.md`)
+
+В отчёте revise — короткий блок **«Skills на машине»**: актуально / нужно обновить (что именно). Пробелы — в план **первым пакетом** вместе с визиткой (или сразу предложить прогнать установку).  
+**Не** создавать в проекте отдельный файл/таблицу «наши skills».
+
 Читать **целиком** (или суммировать ключевые требования):
 
 `$MA_HUB_ROOT/standards/`
@@ -119,6 +129,10 @@ description: Сверить проект с ma-hub standards и подтянут
 
 ### Вердикт
 Одна фраза: насколько проект отстаёт от стандартов vX.Y.Z.
+
+### Skills на машине
+Кэш MA + внешних skills из registry: актуален / устарел / чего не хватает. Действие: ничего / `ma-hub-ensure-latest` / `install-external-skills.sh`.  
+Не предлагать вести список skills внутри репозитория продукта.
 
 ### Соответствует
 Что уже хорошо (короткий список).
