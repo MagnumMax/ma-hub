@@ -36,12 +36,12 @@ argument-hint: [auto | check-only | skip-merge]
 
 | Режим | Как | Починка |
 |-------|-----|---------|
-| **safe** (default) | `/MA-deploy`, `check-only`, `skip-merge` | Не чинить. Блокер → Таблица 6 → ждать «чини» / «не чинить» / «отложить» |
-| **auto** | `auto` (+ можно `check-only` / `skip-merge`) | Чинить блокеры без паузы (CI→эталон thin+дешёвый, хуки→шаблон, Critical, fails). **Исключение:** ponytail — только отчёт, никогда автофикс |
+| **safe** (default) | `/MA-deploy`, `check-only`, `skip-merge` | Не чинить блокеры вне 1A. Блокер → Таблица 6 → ждать «чини» / «не чинить» / «отложить». **Исключение Phase 1A:** Critical/High + явный ponytail — чинить сразу |
+| **auto** | `auto` (+ можно `check-only` / `skip-merge`) | Чинить блокеры без паузы (CI→эталон thin+дешёвый, хуки→шаблон, Critical, fails, сегментный review). Ponytail в 1A — с автофиксом |
 
-**Safe:** Critical / толстый или дорогой CI / тяжёлые хуки / fail проверок → стоп, не commit, не push. Грязное дерево в начале — **не** блокер. Ponytail `net ≤ -80` → стоп; иначе только отчёт.
+**Safe:** толстый/дорогой CI / тяжёлые хуки / fail проверок → стоп, не commit, не push. Грязное дерево в начале — **не** блокер. В 1A Critical/High и явный ponytail чинятся сразу; оставшийся ponytail `net ≤ -80` после автофикса → стоп. Medium/Low → сводный backlog, пауза на решения.
 
-**Auto:** без подтверждений на фикс; root cause (`systematic-debugging`) → fix **в дереве без commit** → re-check, макс. 5 итераций на фазу. Не сошлось → стоп с отчётом. Ponytail даже при `net ≤ -80` — пометить и **продолжить**. Commits только в Phase 3.9.
+**Auto:** без подтверждений на фикс; root cause (`systematic-debugging`) → fix **в дереве без commit** → re-check, макс. 5 итераций на фазу. Не сошлось → стоп с отчётом. Ponytail в 1A с автофиксом; при `net ≤ -80` после фикса — пометить и **продолжить**. Commits только в Phase 3.9.
 
 Аргументы (порядок не важен):
 - пусто — полный цикл до prod, **safe**
@@ -52,10 +52,10 @@ argument-hint: [auto | check-only | skip-merge]
 ## Pipeline
 
 ```
-0 → 1 (ревью ‖ проверки) → 2 (react-doctor) → 3 (disk/build/budget)
-  → 3.5 (supabase если нужно) → 3.8 (уборка до commits) → 3.9 (атомарные commits) → 3.95 (main → dev)
-  → 4 (один push dev) → 5 (CI typecheck+test) → 6 (PR → merge) → 7 (Vercel + smoke)
-  → 7.5 (черновик ТГ + вопрос → send) → 7.6 (уборка хвоста прогона) → Отчёт
+0 → 1 (1S сегменты → 1A review по кускам → 1B проверки → 1C) → 2 (react-doctor)
+  → 3 (disk/build/budget) → 3.5 (supabase если нужно) → 3.8 (уборка до commits)
+  → 3.9 (атомарные commits) → 3.95 (main → dev) → 4 (один push dev) → 5 (CI)
+  → 6 (PR → merge) → 7 (Vercel + smoke) → 7.5 (ТГ) → 7.6 (уборка хвоста) → Отчёт
 ```
 
 Локально перед push: 1–3.5 → **3.8** → **3.9** → **3.95** → 4. `pnpm build` = эмуляция Vercel; Preview на `dev` **не** ждём.
@@ -66,8 +66,8 @@ argument-hint: [auto | check-only | skip-merge]
 
 | Проверка | Phase | Где |
 |----------|-------|-----|
-| Bugbot / security / ponytail | 1 | skills `review-bugbot`, `review-security`, `ponytail-review` |
-| typecheck / lint / i18n / tests | 1 (+ typecheck/test в CI 5) | scripts из плана |
+| Сегментный review (code-review + ponytail) | 1S–1A | эталон `templates/segmented-review-ma-deploy.md` |
+| typecheck / lint / i18n / tests | 1B (+ typecheck/test в CI 5) | scripts из плана |
 | react-doctor | 2 | skill `react-doctor` |
 | build + bundle-budget | 3 | `pnpm build`, `pnpm check:bundle-budget` |
 | supabase | 3.5 | MCP/CLI если diff |
@@ -85,6 +85,7 @@ argument-hint: [auto | check-only | skip-merge]
 5. **3.95 обязателен** до push и до PR. Конфликт «всплыл на PR» = ошибка процесса.
 6. **React Doctor:** `npx react-doctor@latest --verbose --scope changed --blocking error`; baseline `.react-doctor/baseline.json`; monorepo — из React-корня.
 7. Не подменять pipeline gstack land-flow; идеи smoke из `gstack/canary` — ок.
+8. **Сегментный review всегда** (Phase 1S–1A): логические куски в одном дереве — **без** веток/PR на сегмент. Не подменять одним скопом на весь diff.
 
 ## Phase 0 — План + CI gate + hooks gate
 
@@ -111,24 +112,38 @@ argument-hint: [auto | check-only | skip-merge]
 
 ## Phase 1 — Локальные проверки (волны)
 
-Смотрим вместе, чиним по очереди. Команды — из плана. До Phase 2 — закрыть Critical/fails.
+Смотрим вместе, чиним по очереди. Команды — из плана. До Phase 2 — закрыть Critical/fails.  
+Эталон сегментов: `$MA_HUB_ROOT/templates/segmented-review-ma-deploy.md`.
 
 | Волна | Что | Параллель |
 |-------|-----|-----------|
-| **1A** | Bugbot ‖ Security ‖ Ponytail | да |
+| **1S** | План логических сегментов (как split-to-prs, **без** веток/PR) | нет |
+| **1A** | По каждому сегменту: code-review → Critical/High fix → ponytail **с автофиксом** → backlog | нет (сегменты строго по порядку) |
+| **1A-end** | Сводный backlog Medium/Low / спорное → решения | нет |
 | **1B** | typecheck ‖ lint ‖ i18n ‖ tests | да |
 | **1C** | сводка → таблицы | нет |
-| Фиксы | после 1C; safe=стоп; auto=по одному без commit | нет |
+| Фиксы | 1B fails: safe=стоп; auto=по одному без commit | нет |
 
 Diff scope ревью: uncommitted + при необходимости `main..HEAD` (всё, что уедет в релиз). Не ждать 3.9.
 
-**1A:** `review-bugbot`, `review-security` (+ `/security` при auth/PII), `ponytail-review` (читать SKILL с диска; нет файла → блокер `install-external-skills.sh`). Ponytail **никогда** не автофиксить.
+**1S:** нарезать diff на логические куски (смысл / владельцы / фундамент→потребители). Маленький diff → **1 сегмент**, но полный цикл 1A всё равно. Показать таблицу сегментов и сразу продолжать (без «ок?» на план). **Запрещено** создавать ветки/PR на кусок.
 
-**1B:** scripts из плана; Next typegen если нужен. Build **не** здесь.
+**1A (на каждый сегмент):**
+1. `/code-review` по зоне (+ scoped `review-bugbot` / `review-security` при необходимости; auth/PII → `/security`).
+2. **Сразу** исправить Critical и High в дереве (**даже в safe** — исключение этой волны).
+3. `ponytail-review` (читать SKILL с диска; нет файла → блокер `install-external-skills.sh`) → **сразу применить** явные findings (`delete`/`stdlib`/`native`/`yagni`/`shrink`). Спорное — в backlog, не молча.  
+   Исключение MA-deploy: skill «только отчёт» — здесь после отчёта агент **вносит** правки.
+4. Medium/Low и спорное → `SEGMENT_BACKLOG`.
 
-**1C / loop:** safe — стоп на блокере; auto — fix в дереве, макс. 5 итераций. До 3.9 запрещено коммитить «чтобы скорее» / спрашивать план commits / один большой commit всего diff.
+**1A-end:** склеить backlog, убрать дубли, показать таблицу.  
+- **safe:** пауза на «чини / не чинить / отложить» (пакетом ок). Пустой backlog или «всё отложить» → 1B.  
+- **auto:** дешёвые однозначные Medium — починить; остальное в отчёт → 1B.
 
-Ориентир порядка в 3.9: CI → hooks → feat/fix → critical fixes → (только после «чини») simplify → typecheck/lint/i18n/tests → doctor+baseline → build/budget → supabase.
+**1B:** scripts из плана; Next typegen если нужен. Build **не** здесь. Полный suite — **один раз** на всё дерево после 1A (не на каждый сегмент).
+
+**1C / loop:** safe — стоп на блокере 1B; auto — fix в дереве, макс. 5 итераций. До 3.9 запрещено коммитить «чтобы скорее» / спрашивать план commits / один большой commit всего diff.
+
+Ориентир порядка в 3.9: CI → hooks → feat/fix → critical fixes → ponytail/simplify из 1A → typecheck/lint/i18n/tests → doctor+baseline → build/budget → supabase.
 
 ## Phase 2 — React Doctor
 
@@ -292,9 +307,11 @@ Skip при `check-only` / `skip-merge`. Эталон: `$MA_HUB_ROOT/templates/c
 | # | Содержание |
 |---|------------|
 | 0 | План проекта + `CI_JOBS_TO_WAIT` / thin+cheap|thick|expensive / hooks light|heavy / `HAS_SUPABASE` / disk |
-| 1 | Сводка простым языком: этап, safe/auto, блокеры?, commits, PR, merge, Vercel, smoke, ponytail, Telegram клиенту, уборка мусора |
+| 1 | Сводка простым языком: этап, safe/auto, блокеры?, сегменты, commits, PR, merge, Vercel, smoke, ponytail, Telegram клиенту, уборка мусора |
 | 2 | Шаги 1–3.5 / 3.8 / 3.9 / 3.95 — результат |
-| 2b | Ponytail findings + `net` (если были) |
+| 2a | Сегменты 1S: N кусков + порядок; по каждому — Critical/High закрыты? |
+| 2b | Ponytail по сегментам + суммарный `net` |
+| 2c | Сводный backlog (Medium/Low / спорное) + решения |
 | 3 | React Doctor baseline → score/errors |
 | 4 | Атомарные commits (SHA + сообщение) |
 | 5 | Phase 4–7 статусы + ссылки |
@@ -302,7 +319,7 @@ Skip при `check-only` / `skip-merge`. Эталон: `$MA_HUB_ROOT/templates/c
 | 5c | Phase 3.8 + 7.6: скан / найдено / удалено / ждём A/B/C / мусора не было |
 | 6 | Блокеры (только если есть) |
 
-**Этап работы** (одна фраза): проверки без упаковки / жду решения / уборка мусора до commits / жду что удалить / упаковываю / main→dev / выкладываю / жду CI / жду Vercel / жду решение по Telegram / жду ключи Telegram / согласование текста клиенту / уборка хвоста / готово на проде / только проверки.
+**Этап работы** (одна фраза): план сегментов / review сегмента N/M / жду решения по backlog / проверки без упаковки / жду решения / уборка мусора до commits / жду что удалить / упаковываю / main→dev / выкладываю / жду CI / жду Vercel / жду решение по Telegram / жду ключи Telegram / согласование текста клиенту / уборка хвоста / готово на проде / только проверки.
 
 В **safe** при стопе — Таблица 6 + строка: нужны решения по блокерам («чини» / «не чинить» / «отложить»); ночной прогон — `/MA-deploy auto`.
 
@@ -312,7 +329,7 @@ Skip при `check-only` / `skip-merge`. Эталон: `$MA_HUB_ROOT/templates/c
 
 - Dirty tree в 0–3.5 — **не** стоп; commits только в 3.9
 - Успех без 3.9 при грязном дереве; push/PR без 3.95
-- Critical Bugbot/security; ponytail `net ≤ -80` в safe; нет `ponytail-review` на диске
+- Critical/High сегмента не закрыты; ponytail `net ≤ -80` после автофикса в safe; нет `ponytail-review` на диске; сегменты заменены одним скопом на весь diff / открыты PR на куски
 - Fail typecheck/lint/i18n/test; doctor errors/score; disk < 1 GiB / повторный ENOSPC
 - Fail build/budget — **push запрещён**
 - Supabase в diff без плана; красный CI; CI толще thin или дороже эталона (много job’ов / дубль PR); тяжёлые хуки
@@ -324,9 +341,11 @@ Skip при `check-only` / `skip-merge`. Эталон: `$MA_HUB_ROOT/templates/c
 | Когда | Что |
 |-------|-----|
 | Любой ✅ | `verification-before-completion` |
-| 1A | `review-bugbot` ‖ `review-security` ‖ `ponytail-review` (не автофикс) |
+| 1S | нарезка как `split-to-prs` (только план; без веток/PR) → `templates/segmented-review-ma-deploy.md` |
+| 1A | `/code-review` (+ scoped `review-bugbot` / `review-security`) → Critical/High fix → `ponytail-review` **с автофиксом** |
+| 1A-end | сводный backlog → решения (safe) / дешёвые Medium (auto) |
 | 1B | typecheck ‖ lint ‖ i18n ‖ tests |
-| Фиксы auto | `systematic-debugging` (не ponytail) |
+| Фиксы auto (вне 1A) | `systematic-debugging` |
 | 2 | `react-doctor` |
 | 3 budget fail | `performance-optimizer` |
 | 3.5 | Supabase MCP |

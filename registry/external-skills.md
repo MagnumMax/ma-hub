@@ -31,7 +31,7 @@
 
 | Skill | Upstream package | Команды MA |
 |-------|------------------|------------|
-| `ponytail-review` | `dietrichgebert/ponytail` | `/MA-deploy` (Phase 1) |
+| `ponytail-review` | `dietrichgebert/ponytail` | `/MA-deploy` Phase 1A (сегменты; **с автофиксом** в MA-deploy) |
 | `ponytail` | `dietrichgebert/ponytail` | `/MA-idea-to-plan` (bias простоты) |
 | `react-doctor` | `millionco/react-doctor` | `/MA-deploy` Phase 2 |
 | `agent-browser` | `vercel-labs/agent-browser` | `/MA-deploy` Phase 7 smoke B |
@@ -48,8 +48,8 @@
 
 | Skill | Локальный путь | Команды MA |
 |-------|----------------|------------|
-| `review-bugbot` | `~/.cursor/skills-cursor/review-bugbot/` | `/MA-deploy` Phase 1 |
-| `review-security` | `~/.cursor/skills-cursor/review-security/` | `/MA-deploy` Phase 1 |
+| `review-bugbot` | `~/.cursor/skills-cursor/review-bugbot/` | `/MA-deploy` Phase 1A (scoped по сегменту) |
+| `review-security` | `~/.cursor/skills-cursor/review-security/` | `/MA-deploy` Phase 1A (scoped по сегменту) |
 
 ## Политика свежести
 
