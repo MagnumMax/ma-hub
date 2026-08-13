@@ -31,7 +31,7 @@
 
 | Skill | Upstream package | Команды MA |
 |-------|------------------|------------|
-| `ponytail-review` | `dietrichgebert/ponytail` | `/MA-deploy` Phase 1A (сегменты; **с автофиксом**). Не путать с simplify в `/MA-product-pass` |
+| `ponytail-review` | `dietrichgebert/ponytail` | `/MA-deploy` Phase 1A (сегменты; **с автофиксом** + таблица `net`/`Lean already` по куску). Прочитать skill ≠ прогнать. Не путать с simplify в `/MA-product-pass` |
 | `ponytail` | `dietrichgebert/ponytail` | `/MA-idea-to-plan` (вкус простоты, не автофикс деплоя) |
 | `react-doctor` | `millionco/react-doctor` | `/MA-deploy` Phase 2 |
 | `agent-browser` | `vercel-labs/agent-browser` | `/MA-deploy` Phase 7: обязательные пути на проде |
