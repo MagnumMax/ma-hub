@@ -5,7 +5,7 @@ argument-hint: [auto | check-only | skip-merge]
 
 # MA-deploy
 
-**Цель:** довести **текущий проект** до зелёного продакшена: локальные проверки → упаковка → один push `dev` → CI → PR в `main` → Vercel production + smoke.
+**Цель:** довести **текущий проект** до зелёного продакшена: локальные проверки → упаковка → один push `dev` → CI → PR в `main` → Vercel production + проверка обязательных путей.
 
 Я не программист. В **safe** (по умолчанию) блокеры не чини сам — отчёт и жди решения. В **auto** (или после явного «чини») чини сам. Объясняй простым языком только блокеры и итог.
 
@@ -27,10 +27,28 @@ argument-hint: [auto | check-only | skip-merge]
 - сами правила живут в хабе (`standards/`), в проекте — только ссылка и ваши исключения.
 
 Спроси: «Создать `docs/MA-STANDARDS.md`? **ок** / позже».  
-До «ок» (или явного «позже, всё равно продолжай») дальше не иди. После создания — учти pin и Local deviations.
+До «ок» (или явного «позже, всё равно продолжай») дальше не иди. После создания — учти pin и Local deviations, затем ворота обязательных путей (блок ниже). Заглушки в шаблоне **не** считаются списком.
 
 ### Если файл есть
-Учти pin и Local deviations. Перед релизом сверься с `$MA_HUB_ROOT/standards/05-release-and-quality.md`.
+Учти pin, Local deviations и блок обязательных путей релиза. Перед релизом сверься с `$MA_HUB_ROOT/standards/05-release-and-quality.md` и эталоном `$MA_HUB_ROOT/templates/release-must-work-paths.md`.
+
+### Если визитка есть, а обязательных путей нет — стоп
+Эталон: `$MA_HUB_ROOT/templates/release-must-work-paths.md`.  
+Списка нет, если нет заголовка `## Обязательные пути релиза`, таблица пустая, меньше **2** строк `always`, или строки — заглушки (`…`).
+
+**Не** начинай Phase 0/1. **Не** запускай `/MA-revise-project` из этого чата.
+
+1. Покажи черновик 5–10 путей этого продукта (не чужой список).
+2. Спроси:
+
+> Без обязательных путей нельзя честно проверить прод.  
+> **дописать здесь** (рекомендую, если продукт уже на стандартах) / **сначала сверка** `/MA-revise-project` (если дыр больше, чем один список).
+
+3. «Дописать здесь» → вписать блок в `docs/MA-STANDARDS.md`, **не** коммитить до Phase 3.9, дальше Phase 0.  
+4. «Сначала сверка» → стоп выката. Пользователь сам запускает `/MA-revise-project`.  
+5. Визитка сильно отстала (старый релиз «одним комком», версия стандартов сильно ниже хаба) → в рекомендации клонить **сначала сверка**, но ждать ответ.
+
+`check-only` / `skip-merge` — тот же стоп.
 
 ## Режимы и аргументы
 
@@ -55,7 +73,7 @@ argument-hint: [auto | check-only | skip-merge]
 0 → 1 (1S сегменты → 1A review по кускам → 1B проверки → 1C) → 2 (react-doctor)
   → 3 (disk/build/budget) → 3.5 (supabase если нужно) → 3.8 (уборка до commits)
   → 3.9 (атомарные commits) → 3.95 (main → dev) → 4 (один push dev) → 5 (CI)
-  → 6 (PR → merge) → 7 (Vercel + smoke) → 7.5 (ТГ) → 7.6 (уборка хвоста) → Отчёт
+  → 6 (PR → merge) → 7 (Vercel + обязательные пути) → 7.5 (ТГ) → 7.6 (уборка хвоста) → Отчёт
 ```
 
 Локально перед push: 1–3.5 → **3.8** → **3.9** → **3.95** → 4. `pnpm build` = эмуляция Vercel; Preview на `dev` **не** ждём.
@@ -72,7 +90,7 @@ argument-hint: [auto | check-only | skip-merge]
 | build + bundle-budget | 3 | `pnpm build`, `pnpm check:bundle-budget` |
 | supabase | 3.5 | MCP/CLI если diff |
 | Уборка мусора (до commits) | 3.8 | эталон `templates/cleanup-ma-deploy.md` |
-| Vercel prod + smoke | 7 | Vercel MCP + `agent-browser` |
+| Vercel prod + обязательные пути | 7 | эталон `templates/release-must-work-paths.md`; Vercel MCP + `agent-browser` |
 | Клиентский апдейт в Telegram | 7.5 | эталон `templates/telegram-customer-update-ma-deploy.md` + `bootstrap/telegram-customer-update-send.sh` |
 | Уборка мусора (хвост прогона) | 7.6 | тот же эталон `templates/cleanup-ma-deploy.md` |
 
@@ -84,17 +102,19 @@ argument-hint: [auto | check-only | skip-merge]
 4. **Полный test** — один раз в Phase 1 (+ thin CI). Тяжёлые хуки / дорогой CI (много job’ов, дубль PR) = блокер Phase 0.
 5. **3.95 обязателен** до push и до PR. Конфликт «всплыл на PR» = ошибка процесса.
 6. **React Doctor:** `npx react-doctor@latest --verbose --scope changed --blocking error`; baseline `.react-doctor/baseline.json`; monorepo — из React-корня.
-7. Не подменять pipeline gstack land-flow; идеи smoke из `gstack/canary` — ок.
+7. Не подменять pipeline gstack land-flow; идеи smoke из `gstack/canary` — ок. Обязательные пути на проде — эталон `templates/release-must-work-paths.md`, не полный `/qa` с фиксами.
 8. **Сегментный review всегда** (Phase 1S–1A): логические куски в одном дереве — **без** веток/PR на сегмент. Не подменять одним скопом на весь diff.
+9. **Обязательные пути:** без блока в визитке релиз не стартует. На проде — только проверка, без правок кода. Провал выбранного пути → стоп, без письма клиенту, без «горячего» фикса; чинить следующим кругом `/MA-deploy`. **Не** вызывать `/MA-revise-project` изнутри выката.
 
 ## Phase 0 — План + CI gate + hooks gate
 
 Не начинай Phase 1 без плана. Skill: `verification-before-completion`.
 
 1. Корень проекта / React-корень monorepo; `move_agent_to_root` если нужно.
-2. Прочитай `.github/workflows/` (сверка с `templates/ci-ma-deploy.md`), `package.json` scripts, ветки, `supabase/` → `HAS_SUPABASE`, smoke URLs из Vercel.
+2. Прочитай `.github/workflows/` (сверка с `templates/ci-ma-deploy.md`), `package.json` scripts, ветки, `supabase/` → `HAS_SUPABASE`, prod URL из Vercel. Загрузи обязательные пути из визитки (ворота выше уже прошли).  
 3. Таблица «План проекта»: проверка → phase → в CI? → job → команда/skill.  
    Только локально: lint, i18n, doctor, build, budget, supabase.  
+   На проде (Phase 7): обязательные пути из визитки.  
    `CI_JOBS_TO_WAIT` = тонкий job (эталон: один `typecheck-and-test`).
 4. **Thin + cheap CI gate** (эталон `$MA_HUB_ROOT/templates/ci-ma-deploy.md` / `ci-ma-deploy.yml`):
    - **Состав:** только typecheck и/или test → ок. Любой другой job (lint, build, e2e, doctor…) → блокер «CI толще шаблона».
@@ -126,7 +146,7 @@ argument-hint: [auto | check-only | skip-merge]
 
 Diff scope ревью: uncommitted + при необходимости `main..HEAD` (всё, что уедет в релиз). Не ждать 3.9.
 
-**1S:** нарезать diff на логические куски (смысл / владельцы / фундамент→потребители). Маленький diff → **1 сегмент**, но полный цикл 1A всё равно. Показать таблицу сегментов и сразу продолжать (без «ок?» на план). **Запрещено** создавать ветки/PR на кусок.
+**1S:** нарезать diff на логические куски (смысл / владельцы / фундамент→потребители). В таблице сегментов указать **Область** (для отбора `if-touched` путей). Маленький diff → **1 сегмент**, но полный цикл 1A всё равно. Показать таблицу сегментов и сразу продолжать (без «ок?» на план). **Запрещено** создавать ветки/PR на кусок.
 
 **1A (на каждый сегмент):**
 1. `/code-review` по зоне (+ scoped `review-bugbot` / `review-security` при необходимости; auth/PII → `/security`).
@@ -222,15 +242,21 @@ Fail → `ci-investigator` → debugging; auto: fix → 3.9-like → 3.95 есл
 Skip при `skip-merge` / `check-only`. Только `--merge`. Конфликт после 3.95 → чинить через 3.95, не «на PR».  
 Создать/найти PR → checks = `CI_JOBS_TO_WAIT` → при залипании skill `babysit` (safe: диагноз; auto: довести) → `gh pr merge --merge --delete-branch=false` → merge SHA → Phase 7.
 
-## Phase 7 — Vercel production + smoke
+## Phase 7 — Vercel production + обязательные пути
 
-Skip при `check-only` / `skip-merge`. Skills: `vercel-cli`, `deployments-cicd`; путь — **Vercel MCP**.
+Skip при `check-only` / `skip-merge`. Skills: `vercel-cli`, `deployments-cicd`; путь — **Vercel MCP**. Эталон путей: `$MA_HUB_ROOT/templates/release-must-work-paths.md`.
 
 1. Production deployment на `main` = merge SHA → poll **READY** (~5–10 мин, timeout 20). ERROR → logs; auto: новый круг через `dev`+3.95; safe: стоп.
 2. Smoke A: HTTP 200 `/` (+ `/api/health` если есть); `get_runtime_errors` ~15m.
-3. Smoke B: `agent-browser` на 1–2 ключевых prod URL (не blank/5xx). Нет browser → ⚠️ в отчёте, не фейковый полный ✅.
+3. Набор путей:
+   - все строки `always`;
+   - плюс `if-touched`, чья **Область** совпадает с сегментом 1S;
+   - весь каталог — только по явной просьбе или если релиз крупный (>5 сегментов / новый портал).
+   Показать таблицу «сегодня гоняем» и сразу идти (без «ок?», если выбор однозначный).
+4. Smoke B: `agent-browser` на живом prod URL — пройти **каждый выбранный путь** как пользователь. Только проверка: **не** чинить исходники, **не** commits, **не** полный `/qa` с циклом правок. Нет браузера → ⚠️ в отчёте, не фейковый полный ✅. Нужна **Роль**, а тестового входа нет → стоп, спросить вход; путь молча не пропускать. Пароли в отчёте — `[REDACTED]`.
+5. Провал выбранного `always` или выбранного `if-touched` (даже в `auto`): **стоп** → не Phase 7.5 → не чинить на выложенном проде → не откатывать прод из чата. В отчёте: путь, что увидели, скрин если есть. Чинить следующим кругом `/MA-deploy`. Косметика вне набора — в отчёт, не блокер.
 
-**Gate:** READY + A OK + B OK (или явный fallback) = успех → **Phase 7.5**.
+**Gate:** READY + A OK + все выбранные пути OK (или явный fallback «нет браузера») = успех → **Phase 7.5**. Провал пути = не успех, 7.5 запрещён.
 
 ## Phase 7.5 — Клиентское уведомление в Telegram
 
@@ -306,8 +332,8 @@ Skip при `check-only` / `skip-merge`. Эталон: `$MA_HUB_ROOT/templates/c
 
 | # | Содержание |
 |---|------------|
-| 0 | План проекта + `CI_JOBS_TO_WAIT` / thin+cheap|thick|expensive / hooks light|heavy / `HAS_SUPABASE` / disk |
-| 1 | Сводка простым языком: этап, safe/auto, блокеры?, сегменты, commits, PR, merge, Vercel, smoke, ponytail, Telegram клиенту, уборка мусора |
+| 0 | План проекта + `CI_JOBS_TO_WAIT` / thin+cheap|thick|expensive / hooks light|heavy / `HAS_SUPABASE` / disk / обязательные пути: есть|нет |
+| 1 | Сводка простым языком: этап, safe/auto, блокеры?, сегменты, commits, PR, merge, Vercel, обязательные пути, ponytail, Telegram клиенту, уборка мусора |
 | 2 | Шаги 1–3.5 / 3.8 / 3.9 / 3.95 — результат |
 | 2a | Сегменты 1S: N кусков + порядок; по каждому — Critical/High закрыты? |
 | 2b | Ponytail по сегментам + суммарный `net` |
@@ -315,11 +341,12 @@ Skip при `check-only` / `skip-merge`. Эталон: `$MA_HUB_ROOT/templates/c
 | 3 | React Doctor baseline → score/errors |
 | 4 | Атомарные commits (SHA + сообщение) |
 | 5 | Phase 4–7 статусы + ссылки |
+| 5a | Обязательные пути: сколько always / if-touched в визитке; что гоняли; OK / провал (какой путь) |
 | 5b | Phase 7.5: черновик показан? / слать клиенту? / ключи? / текст согласован? / отправлено / пропуск |
 | 5c | Phase 3.8 + 7.6: скан / найдено / удалено / ждём A/B/C / мусора не было |
 | 6 | Блокеры (только если есть) |
 
-**Этап работы** (одна фраза): план сегментов / review сегмента N/M / жду решения по backlog / проверки без упаковки / жду решения / уборка мусора до commits / жду что удалить / упаковываю / main→dev / выкладываю / жду CI / жду Vercel / жду решение по Telegram / жду ключи Telegram / согласование текста клиенту / уборка хвоста / готово на проде / только проверки.
+**Этап работы** (одна фраза): жду обязательные пути / план сегментов / review сегмента N/M / жду решения по backlog / проверки без упаковки / жду решения / уборка мусора до commits / жду что удалить / упаковываю / main→dev / выкладываю / жду CI / жду Vercel / гоняю пути на проде / жду решение по Telegram / жду ключи Telegram / согласование текста клиенту / уборка хвоста / готово на проде / только проверки.
 
 В **safe** при стопе — Таблица 6 + строка: нужны решения по блокерам («чини» / «не чинить» / «отложить»); ночной прогон — `/MA-deploy auto`.
 
@@ -335,6 +362,8 @@ Skip при `check-only` / `skip-merge`. Эталон: `$MA_HUB_ROOT/templates/c
 - Fail typecheck/lint/i18n/test; doctor errors/score; disk < 1 GiB / повторный ENOSPC
 - Fail build/budget — **push запрещён**
 - Supabase в diff без плана; красный CI; CI толще thin или дороже эталона (много job’ов / дубль PR); тяжёлые хуки
+- Нет блока обязательных путей (и нет ответа «дописать здесь» / «сначала сверка»); запуск `/MA-revise-project` изнутри выката
+- Провал выбранного обязательного пути на проде; переход к 7.5 после провала пути; правка кода на уже выложенном проде
 - PR conflict / fail checks; push не в `dev`; Vercel не READY
 - Секреты / `.env` / tokens в diff — **всегда стоп**, даже в auto
 
@@ -353,6 +382,6 @@ Skip при `check-only` / `skip-merge`. Эталон: `$MA_HUB_ROOT/templates/c
 | 3.5 | Supabase MCP |
 | 5 fail | `ci-investigator` |
 | 6 stuck | `babysit` |
-| 7 | Vercel MCP + `vercel-cli` / `deployments-cicd`; smoke B → `agent-browser` |
+| 7 | Vercel MCP + `vercel-cli` / `deployments-cicd`; набор путей из визитки → `agent-browser` (только проверка) |
 | 7.5 | черновик (полный текст) + «слать?» → (если да) ключи → снова полный текст + «отправить» → `bootstrap/telegram-customer-update-send.sh` |
 | 3.8 / 7.6 | скан мусора (до commits + хвост) → safe: A/B/C · auto: safe junk сразу, секреты/ask спросить → `templates/cleanup-ma-deploy.md` |
