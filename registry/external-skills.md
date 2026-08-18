@@ -35,8 +35,6 @@
 | `ponytail` | `dietrichgebert/ponytail` | `/MA-idea-to-plan` (вкус простоты, не автофикс деплоя) |
 | `react-doctor` | `millionco/react-doctor` | `/MA-deploy` Phase 2 |
 | `agent-browser` | `vercel-labs/agent-browser` | `/MA-deploy` Phase 7: обязательные пути на проде |
-| `verification-before-completion` | `obra/superpowers` | все `/MA-*` |
-| `systematic-debugging` | `obra/superpowers` | `/MA-deploy` auto-fix |
 | `impeccable` | `pbakaus/impeccable` | `/MA-design-screen` |
 | Aaron SEO + GEO tracks | `aaron-he-zhu/aaron-marketing-skills` | `/MA-seo-geo-audit` (+ skill `seo-geo-audit`) |
 

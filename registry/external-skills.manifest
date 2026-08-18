@@ -10,17 +10,6 @@ PACKAGE mattpocock/skills
 SKILL grill-me
 SKILL improve-codebase-architecture
 
-PACKAGE obra/superpowers
-SKILL using-superpowers
-SKILL brainstorming
-SKILL writing-plans
-SKILL executing-plans
-SKILL requesting-code-review
-SKILL receiving-code-review
-SKILL systematic-debugging
-SKILL test-driven-development
-SKILL verification-before-completion
-
 PACKAGE garrytan/gstack
 SKILL gstack
 SKILL office-hours

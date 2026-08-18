@@ -59,7 +59,7 @@ argument-hint: [auto | check-only | skip-merge]
 
 **Safe:** толстый/дорогой CI / тяжёлые хуки / fail проверок → стоп, не commit, не push. Грязное дерево в начале — **не** блокер. В 1A Critical/High и явный ponytail чинятся сразу; оставшийся ponytail `net ≤ -80` после автофикса → стоп. Medium/Low → сводный backlog, пауза на решения.
 
-**Auto:** без подтверждений на фикс; root cause (`systematic-debugging`) → fix **в дереве без commit** → re-check, макс. 5 итераций на фазу. Не сошлось → стоп с отчётом. Ponytail в 1A с автофиксом; при `net ≤ -80` после фикса — пометить и **продолжить**. Commits только в Phase 3.9.
+**Auto:** без подтверждений на фикс; root cause → fix **в дереве без commit** → re-check, макс. 5 итераций на фазу. Не сошлось → стоп с отчётом. Ponytail в 1A с автофиксом; при `net ≤ -80` после фикса — пометить и **продолжить**. Commits только в Phase 3.9.
 
 Аргументы (порядок не важен):
 - пусто — полный цикл до prod, **safe**
@@ -109,7 +109,7 @@ argument-hint: [auto | check-only | skip-merge]
 
 ## Phase 0 — План + CI gate + hooks gate
 
-Не начинай Phase 1 без плана. Skill: `verification-before-completion`.
+Не начинай Phase 1 без плана. Перед каждым ✅ — доказательство, не галочка.
 
 1. Корень проекта / React-корень monorepo; `move_agent_to_root` если нужно.
 2. Прочитай `.github/workflows/` (сверка с `templates/ci-ma-deploy.md`), `package.json` scripts, ветки, `supabase/` → `HAS_SUPABASE`, prod URL из Vercel. Загрузи обязательные пути из визитки (ворота выше уже прошли).  
@@ -380,12 +380,12 @@ Skip при `check-only` / `skip-merge`. Эталон: `$MA_HUB_ROOT/templates/c
 
 | Когда | Что |
 |-------|-----|
-| Любой ✅ | `verification-before-completion` |
+| Любой ✅ | доказательство, не галочка |
 | 1S | нарезка как `split-to-prs` (только план; без веток/PR) → `templates/segmented-review-ma-deploy.md` |
 | 1A | `/code-review` (+ scoped `review-bugbot` / `review-security`) → Critical/High fix → **отдельный** `ponytail-review` **с автофиксом** + строка таблицы 2b (иначе стоп до 1B) |
 | 1A-end | сводный backlog → решения (safe) / дешёвые Medium (auto) |
 | 1B | typecheck ‖ lint ‖ i18n ‖ tests |
-| Фиксы auto (вне 1A) | `systematic-debugging` |
+| Фиксы auto (вне 1A) | причина → фикс → повторная проверка |
 | 2 | `react-doctor` |
 | 3 budget fail | `performance-optimizer` |
 | 3.5 | Supabase MCP |
