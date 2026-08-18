@@ -198,7 +198,7 @@ description: Сверить проект с ma-hub standards и подтянут
 ## Исполнение
 
 - До «ок» на план (в safe) — **не** массово переписывать UI и **не** удалять файлы.
-- При правках: следовать standards + skills (impeccable / shadcn / next / supabase / verification).
+- При правках: следовать standards + `shadcn` / `vercel-react-best-practices` / `supabase-postgres-best-practices`.
 - Создать/обновить `docs/MA-STANDARDS.md` из шаблона  
   `$MA_HUB_ROOT/templates/project-ma-link.md`  
   с актуальной версией, policy (`track main` или pin), отклонениями, блоком обязательных путей релиза и тем, что перенесли из дублей.

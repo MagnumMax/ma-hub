@@ -24,11 +24,11 @@
 Локально после bootstrap/pull: `~/.cursor/commands/` — это **кэш**, не место для правок «втихую».
 
 ### 3. Skills — по задаче
-Глубокие плейбуки (grill-me, writing-plans, impeccable, shadcn, vercel-react…). Команды **ссылаются** на навыки; дублировать весь текст навыка в команду не нужно.
+Глубокие плейбуки (ponytail, shadcn, vercel-react, Aaron SEO…). Команды **ссылаются** на навыки; дублировать весь текст навыка в команду не нужно. Только то, чего модели не хватает: инструмент, живой эталон библиотеки, узкий ритуал.
 
 **MA-owned skills** (оркестраторы Monster Automation, напр. `seo-geo-audit`) живут в **ma-hub** → `skills/` и ставятся скриптом `install-skills.sh`.
 
-**Внешние skills** (Aaron, Vercel, ponytail, impeccable…) — **не** копируются в хаб. В хабе только реестр ссылок: `registry/external-skills.md` + `registry/external-skills.manifest`. Установка/обновление с upstream: `bootstrap/install-external-skills.sh` (weekly / bootstrap). При запуске `/MA-*` агент **читает** актуальный `SKILL.md` с диска (пути — в реестре).
+**Внешние skills** (Aaron, Vercel, ponytail…) — **не** копируются в хаб. В хабе только реестр ссылок: `registry/external-skills.md` + `registry/external-skills.manifest`. Установка/обновление с upstream: `bootstrap/install-external-skills.sh` (weekly / bootstrap). При запуске `/MA-*` агент **читает** актуальный `SKILL.md` с диска (пути — в реестре).
 
 **Cursor-native** (`review-bugbot`, `review-security`) — из `~/.cursor/skills-cursor/`, не через manifest.
 

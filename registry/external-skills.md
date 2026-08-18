@@ -35,7 +35,9 @@
 | `ponytail` | `dietrichgebert/ponytail` | `/MA-idea-to-plan` (вкус простоты, не автофикс деплоя) |
 | `react-doctor` | `millionco/react-doctor` | `/MA-deploy` Phase 2 |
 | `agent-browser` | `vercel-labs/agent-browser` | `/MA-deploy` Phase 7: обязательные пути на проде |
-| `impeccable` | `pbakaus/impeccable` | `/MA-design-screen` |
+| `shadcn` | `shadcn/ui` | `/MA-design-screen` |
+| `vercel-react-best-practices` | `vercel-labs/agent-skills` | `/MA-design-screen` |
+| `supabase-postgres-best-practices` | `supabase/agent-skills` | сверка проекта / база |
 | Aaron SEO + GEO tracks | `aaron-he-zhu/aaron-marketing-skills` | `/MA-seo-geo-audit` (+ skill `seo-geo-audit`) |
 
 Полный список skills в каждом пакете — в `.manifest`.

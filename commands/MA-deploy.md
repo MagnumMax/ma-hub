@@ -9,7 +9,7 @@ argument-hint: [auto | check-only | skip-merge]
 
 Я не программист. В **safe** (по умолчанию) блокеры не чини сам — отчёт и жди решения. В **auto** (или после явного «чини») чини сам. Объясняй простым языком только блокеры и итог.
 
-**Этот `/MA-deploy` — единственный оркестратор релиза.** Не подменяй `gstack/ship`, `land-and-deploy`, `setup-deploy`. Не подменяй глубокой чисткой `/MA-product-pass` (там simplify «убери ИИ-стиль»; здесь сегменты + ponytail). Карта: `$MA_HUB_ROOT/templates/ma-command-map.md`.
+**Этот `/MA-deploy` — единственный оркестратор релиза.** Не подменяй чужим ship/land-flow. Не подменяй глубокой чисткой `/MA-product-pass` (там simplify «убери ИИ-стиль»; здесь сегменты + ponytail). Карта: `$MA_HUB_ROOT/templates/ma-command-map.md`.
 
 **Вход:** $ARGUMENTS
 
@@ -102,7 +102,7 @@ argument-hint: [auto | check-only | skip-merge]
 4. **Полный test** — один раз в Phase 1 (+ thin CI). Тяжёлые хуки / дорогой CI (много job’ов, дубль PR) = блокер Phase 0.
 5. **3.95 обязателен** до push и до PR. Конфликт «всплыл на PR» = ошибка процесса.
 6. **React Doctor:** `npx react-doctor@latest --verbose --scope changed --blocking error`; baseline `.react-doctor/baseline.json`; monorepo — из React-корня.
-7. Не подменять pipeline gstack land-flow; идеи smoke из `gstack/canary` — ок. Обязательные пути на проде — эталон `templates/release-must-work-paths.md`, не полный `/qa` с фиксами.
+7. Не подменять этот pipeline чужим land-flow. Обязательные пути на проде — эталон `templates/release-must-work-paths.md`, не полный `/qa` с фиксами.
 8. **Сегментный review всегда** (Phase 1S–1A): логические куски в одном дереве — **без** веток/PR на сегмент. Не подменять одним скопом на весь diff.
 9. **Обязательные пути:** без блока в визитке релиз не стартует. На проде — только проверка, без правок кода. Провал выбранного пути → стоп, без письма клиенту, без «горячего» фикса; чинить следующим кругом `/MA-deploy`. **Не** вызывать `/MA-revise-project` изнутри выката.
 10. **Ponytail по каждому куску — с доказательством.** Прочитать skill ≠ прогнать. Обычное ревью на ошибки / security ≠ ponytail. Нет строки таблицы 2b (`net` или `Lean already. Ship.`) по **каждому** сегменту 1S → **стоп до 1B** (не проверки, не упаковка, не push). Наверстать одним проходом на весь diff **запрещено**.

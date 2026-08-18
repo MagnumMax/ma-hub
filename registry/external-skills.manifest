@@ -5,39 +5,19 @@
 #   SKILL <name>
 # Blank line separates packages. Lines starting with # are comments.
 # Do not store skill body text in ma-hub — only sources. See external-skills.md.
-
-PACKAGE mattpocock/skills
-SKILL grill-me
-SKILL improve-codebase-architecture
-
-PACKAGE garrytan/gstack
-SKILL gstack
-SKILL office-hours
+#
+# Keep only what Grok 4.6 does not already do: tools, live library rules, or a
+# unique MA ritual. Process/taste/second-OS packs stay out.
 
 PACKAGE dietrichgebert/ponytail
 SKILL ponytail
 SKILL ponytail-review
-
-PACKAGE pbakaus/impeccable
-SKILL impeccable
-
-PACKAGE nextlevelbuilder/ui-ux-pro-max-skill
-SKILL ui-ux-pro-max
-
-PACKAGE leonxlnx/taste-skill
-SKILL design-taste-frontend
-SKILL high-end-visual-design
-SKILL redesign-existing-projects
 
 PACKAGE shadcn/ui
 SKILL shadcn
 
 PACKAGE vercel-labs/agent-skills
 SKILL vercel-react-best-practices
-SKILL web-design-guidelines
-
-PACKAGE wshobson/agents
-SKILL nextjs-app-router-patterns
 
 PACKAGE supabase/agent-skills
 SKILL supabase-postgres-best-practices
@@ -47,9 +27,6 @@ SKILL react-doctor
 
 PACKAGE vercel-labs/agent-browser
 SKILL agent-browser
-
-PACKAGE vercel-labs/skills
-SKILL find-skills
 
 PACKAGE aaron-he-zhu/aaron-marketing-skills
 SKILL keyword-research

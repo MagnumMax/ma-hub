@@ -12,7 +12,7 @@
 | Стандарты продуктов | `standards/` | читаются из хаба напрямую |
 | Бэкап User Rules | `docs/user-rules.md` | Cursor Settings → Rules |
 
-Сторонние skills (Aaron, Vercel, ponytail, impeccable…) **не** хранятся текстом в ma-hub — только **ссылки на upstream** в `registry/`. Команды **читают** актуальный `SKILL.md` с диска.
+Сторонние skills (Aaron, Vercel, ponytail…) **не** хранятся текстом в ma-hub — только **ссылки на upstream** в `registry/`. Команды **читают** актуальный `SKILL.md` с диска.
 
 ## Если меняете команды / MA-skills / стандарты / user-rules
 
