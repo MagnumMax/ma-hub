@@ -38,3 +38,4 @@
 - **CI (минуты Actions)** — эталон `templates/ci-ma-deploy.md`: один job typecheck+test, только push на main/dev; дубль pull_request — только если в Local deviations «есть форки».
 - **Клиентский Telegram после прода** — эталон `templates/telegram-customer-update-ma-deploy.md` (Phase 7.5 `/MA-deploy`, всегда согласование текста).
 - **Обязательные пути релиза** — блок в этой визитке (эталон `templates/release-must-work-paths.md`). Пишет `/MA-revise-project`; `/MA-deploy` без списка не стартует (можно дописать в том же выкате). Полную сверку из выката не запускать.
+- **Тестовые входы** — канон в `templates/release-must-work-paths.md`. Агент сам пишет `.env.local`. `.env.example` — email без пароля. Нет ролей на проде — предложить создать менеджера и клиента + демо. Проверка на бою; созданное за прогон сверх демо — убрать до письма клиенту.

@@ -47,7 +47,7 @@ ma-hub-check-drift            # кэш == хаб?
 | `skills/` | MA-owned skills (оркестраторы Monster Automation) |
 | `registry/` | Проекты + **ссылки** на внешние skills (`external-skills.*`) |
 | `bootstrap/` | Установка, ensure-latest, cloud-ensure, drift |
-| `templates/` | Визитка проекта, обязательные пути релиза, cloud setup, эталоны хуков, thin CI, Telegram-апдейт клиенту |
+| `templates/` | Визитка проекта, обязательные пути релиза, тестовые входы QA, cloud setup, эталоны хуков, thin CI, Telegram-апдейт клиенту |
 | `docs/user-rules.md` | Бэкап личных правил Cursor |
 | `docs/hub-maintenance.md` | Как не забыть обновить хаб |
 | `docs/auto-sync.md` | Daily/version sync + Cloud Agent |
