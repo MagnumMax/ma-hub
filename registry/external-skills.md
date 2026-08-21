@@ -48,8 +48,8 @@
 
 | Skill | Локальный путь | Команды MA |
 |-------|----------------|------------|
-| `review-bugbot` | `~/.cursor/skills-cursor/review-bugbot/` | `/MA-deploy` Phase 1A (scoped по сегменту) |
-| `review-security` | `~/.cursor/skills-cursor/review-security/` | `/MA-deploy` Phase 1A (scoped по сегменту) |
+| `review-bugbot` | `~/.cursor/skills-cursor/review-bugbot/` | `/MA-deploy` Phase 1A: только если сегмент меняет **поведение**; scoped по куску; **не** `/review` |
+| `review-security` | `~/.cursor/skills-cursor/review-security/` | `/MA-deploy` Phase 1A: если сегмент про **вход / роли / платежи / PII / секреты**; scoped по куску; **не** `/review` |
 
 ## Политика свежести
 
