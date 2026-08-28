@@ -53,8 +53,10 @@ flush_package() {
   done
 
   echo "add ${package} → ${skills[*]}"
-  # Upstream can fail intermittently; continue other packages
-  if ! "${args[@]}" >/dev/null 2>&1; then
+  # Upstream can fail intermittently; continue other packages.
+  # Close stdin: `npx skills` would otherwise consume the rest of the manifest
+  # from the while-read loop and skip every package after the first.
+  if ! "${args[@]}" >/dev/null 2>&1 </dev/null; then
     echo "WARN: failed to add ${package} (partial install possible)"
   fi
 

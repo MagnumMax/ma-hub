@@ -8,6 +8,8 @@
 #
 # Keep only what Grok 4.6 does not already do: tools, live library rules, or a
 # unique MA ritual. Process/taste/second-OS packs stay out.
+# Exception: emilkowalski/skills — animation/library expertise for /MA-design-screen,
+# not a generic taste OS (impeccable / ui-ux-pro-max still banned).
 
 PACKAGE dietrichgebert/ponytail
 SKILL ponytail
@@ -21,6 +23,20 @@ SKILL vercel-react-best-practices
 
 PACKAGE supabase/agent-skills
 SKILL supabase-postgres-best-practices
+
+PACKAGE emilkowalski/skills
+SKILL emil-design-eng
+SKILL animate
+SKILL animate-expo
+SKILL review-animations
+SKILL improve-animations
+SKILL find-animation-opportunities
+SKILL animation-vocabulary
+SKILL apple-design
+SKILL write-swift
+SKILL pick-ui-library
+SKILL prototype
+SKILL ask-sonner
 
 PACKAGE millionco/react-doctor
 SKILL react-doctor

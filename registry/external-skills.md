@@ -39,6 +39,7 @@
 | `vercel-react-best-practices` | `vercel-labs/agent-skills` | `/MA-design-screen` |
 | `supabase-postgres-best-practices` | `supabase/agent-skills` | сверка проекта / база |
 | Aaron SEO + GEO tracks | `aaron-he-zhu/aaron-marketing-skills` | `/MA-seo-geo-audit` (+ skill `seo-geo-audit`) |
+| Motion + UI (Emil Kowalski) | `emilkowalski/skills` | `/MA-design-screen` (анимации, прототипы, выбор UI-библиотеки, Sonner). Не общий «вкус-пак»: компас экрана по-прежнему стандарт хаба |
 
 Полный список skills в каждом пакете — в `.manifest`.
 
