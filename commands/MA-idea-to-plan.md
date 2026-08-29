@@ -11,25 +11,11 @@ argument-hint: "<описание идеи или фичи>"
 
 Карта ритуалов: `$MA_HUB_ROOT/templates/ma-command-map.md`. **Это не выкат и не полный прогон продукта.**
 
-## 0. Ворота: стандарт в проекте
+## 0. Ворота: канон-файлы
 
 Найди **ma-hub**: `~/.config/ma-hub/config` → `MA_HUB_ROOT`, иначе `~/ma-hub`.  
 Если хаба нет — скажи запустить bootstrap и остановись.  
-Проверь в **текущем проекте** файл `docs/MA-STANDARDS.md`.
-
-### Если файла нет — стоп
-Не начинай ритуал. Предложи создать визитку из `$MA_HUB_ROOT/templates/project-ma-link.md` → `docs/MA-STANDARDS.md`.
-
-Объясни коротко **зачем**:
-- это связь проекта с общими правилами Monster Automation (вкус, процесс, качество);
-- без неё команда не знает pin / локальные отклонения и легко уйдёт «в общий шаблон», а не в закон этого продукта;
-- сами правила живут в хабе (`standards/`), в проекте — только ссылка и ваши исключения.
-
-Спроси: «Создать `docs/MA-STANDARDS.md`? **ок** / позже».  
-До «ок» (или явного «позже, всё равно продолжай») дальше не иди. После создания — учти pin и Local deviations.
-
-### Если файл есть
-Учти pin и Local deviations. Перед планом прочитай `$MA_HUB_ROOT/standards/` — особенно `02-product-preferences.md`, `03-engineering-defaults.md`, `01-role-and-voice.md`.
+Следуй `$MA_HUB_ROOT/templates/project-canonical-pack.md` (раздел «Ворота /MA-*»). Перед планом прочитай `$MA_HUB_ROOT/standards/` — особенно `02-product-preferences.md`, `03-engineering-defaults.md`, `01-role-and-voice.md`.
 
 ## Обязательный порядок (не пропускай шаги)
 
@@ -81,7 +67,8 @@ argument-hint: "<описание идеи или фичи>"
 - экран/UI ещё сырой → `/MA-design-screen`
 - код шумный / много модулей → `/MA-product-pass`
 - нужно на прод → `/MA-deploy`
-- фича даёт новый пользовательский путь → предложить одну строку в блок обязательных путей визитки (эталон `$MA_HUB_ROOT/templates/release-must-work-paths.md`)
+- фича даёт новый пользовательский путь → предложить одну строку в блок обязательных путей в `AGENTS.md` (эталон `$MA_HUB_ROOT/templates/release-must-work-paths.md`)
+- новая публичная страница → в итоге напомнить: карту для ИИ обновит `/MA-seo-geo-audit`, не править `llms.txt` на глаз
 
 ## Стиль ответа
 - Русский, коротко, по делу

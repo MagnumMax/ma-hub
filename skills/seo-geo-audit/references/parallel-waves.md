@@ -100,6 +100,7 @@ No specialist agents. Parent agent only:
 3. Prioritize with [prioritization.md](prioritization.md).
 4. Fill [report-template.md](report-template.md) + CEO gate [ceo-env-checklist.md](ceo-env-checklist.md).
 5. On local: Stage 1 primary; Stage 2 / “После деплоя” only for items that need **your** live host (not SERP/competitors).
+6. If the mode includes GEO: draft `llms.txt` per [llms-txt.md](llms-txt.md); put it in the report. After confirm, write the existing generator/route if one exists, otherwise a static file (default: yes). Never add `public/llms.txt` when a route already serves `/llms.txt`.
 
 ---
 

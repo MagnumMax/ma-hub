@@ -38,7 +38,7 @@
 - Before using Monster Automation (`/MA-*`), ensure hub is present:
   `bash "$HOME/ma-hub/bootstrap/cloud-ensure.sh"` (or rely on environment `install`).
 - Source of truth: https://github.com/MagnumMax/ma-hub — not copies on a laptop.
-- Standards live in `$HOME/ma-hub/standards/` (track main unless the project pins a tag in `docs/MA-STANDARDS.md`).
+- Standards live in `$HOME/ma-hub/standards/` (track main unless the project pins a tag in `AGENTS.md`).
 ```
 
 ## Что считается «новой версией»

@@ -76,7 +76,7 @@ COMPANY_TELEGRAM_THREAD_ID_UPDATES=…
 Хорошо: отдельные буллеты на statement PDF, branding settings и identity country — если клиент это увидит.  
 Плохо: один буллет «Customer profile improvements» вместо трёх разных фич; `Reports → Status: …`; эссе на 2 строки; список chore.
 
-Local deviations в `docs/MA-STANDARDS.md` продукта — **только** язык или особый чат, не другой формат секций.
+Local deviations в `AGENTS.md` продукта — **только** язык или особый чат, не другой формат секций.
 
 Эталон (как уходит в чат) — **полное полезное покрытие**, не урезанный «топ-6»:
 
@@ -164,7 +164,7 @@ EOF
 3. В `.env.local`: `COMPANY_TELEGRAM_CHAT_ID`, `COMPANY_TELEGRAM_THREAD_ID_UPDATES`.
 4. В `.env.example` — те же ключи без значений.
 5. На машине один раз: `~/.config/ma-hub/telegram.env` с `MA_TELEGRAM_BOT_TOKEN`.
-6. Local deviations в `docs/MA-STANDARDS.md` при особом языке/чате — по желанию.
+6. Local deviations в `AGENTS.md` при особом языке/чате — по желанию.
 
 ## Связь с `/MA-deploy`
 
