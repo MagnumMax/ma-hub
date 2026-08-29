@@ -169,6 +169,8 @@ If brands/people/products lack entity profiles and the GEO skill flags it, note 
 
 Primary base only (your pages on local or prod). Live AI-citation probes of **your** URL (Tavily etc.) only on **prod** when tools are available; on local mark *your* citation probe as post-deploy. Market SERP/competitor learnings still apply to local content fixes.
 
+After this track (Wave 3 merge): assemble `llms.txt` from audit evidence per [references/llms-txt.md](references/llms-txt.md). If the repo already serves `/llms.txt` via a route or generator, update that source — do not add `public/llms.txt`. Do not skip GEO scoring and only write llms.txt.
+
 ### Track F — Structure (`site-structure-optimizer`)
 
 Read `~/.agents/skills/site-structure-optimizer/SKILL.md`.
@@ -242,11 +244,12 @@ Use [references/report-template.md](references/report-template.md). Always inclu
 6. **Evidence gaps** — what could not be measured and how to get it.
 7. **Environment notes** — what only applies after deploy because it needs **your** live URL (Stage 2): your domain trust, your indexation, your live robots/canonical, your citation probe — **not** SERP/competitors (those belong in Stage 1).
 8. **Next commands** — 2–4 concrete follow-ups (e.g. fix P0, then `/MA-seo-geo-audit <url> quick prod` after deploy).
+9. **`llms.txt` draft** — required when the mode includes GEO. Follow [references/llms-txt.md](references/llms-txt.md). Show the full proposed file (or diff) in the report. Write to the existing generator/route if one exists; otherwise write a static file. Write only after user «ок» / «чини»; default recommendation **yes, update llms.txt**. Do not invent URLs. Do not add `public/llms.txt` when a route already serves `/llms.txt`. Modes `tech` / `structure` / `authority`: skip unless asked.
 
 On **local** runs: Stage 1 is primary; Stage 2 stays unchecked with “после выкладки”.  
 On **prod** / **post-deploy**: update Stage 2; Stage 1 may be marked ✅ if prior local gate was already closed.
 
-Default: **inline report only**. Write files only if the user asks (e.g. `memory/seo-geo/audit/YYYY-MM-DD-<domain>.md`).
+Default: **inline report only** (no `memory/` audit file unless the user asks). **Exception:** `llms.txt` is a first-class GEO deliverable — draft always, write after confirm (static file **or** existing generator).
 
 ## Primary entrypoint (Cursor)
 
@@ -290,4 +293,5 @@ seo-geo-audit --mode post-deploy https://www.example.com
 - GEO track ran whenever the mode requires it; SERP/competitor ran on market base in modes that require them
 - Findings are evidence-labeled and prioritized (SEO + GEO in one backlog); market-driven content fixes appear before launch when environment was local
 - Report follows the template and is actionable without specialist jargon
+- GEO modes include a proposed `llms.txt` (and the live source is updated after confirm, unless the user said no: static file **or** existing route/generator, never both)
 - User can re-run the same skill after fixes for a delta check

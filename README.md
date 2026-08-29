@@ -2,7 +2,7 @@
 
 Публичный источник правды для **Monster Automation**: стандарты продуктов, команды Cursor `/MA-*`, MA-owned skills, bootstrap окружения.
 
-Один раз настроили — на любом ноутбуке поднимается та же механика. Проекты **не копируют** стандарты целиком: держат тонкую ссылку и всегда тянут **latest с `main`** (опционально — закреплённый тег).
+Один раз настроили — на любом ноутбуке поднимается та же механика. Проекты **не копируют** стандарты целиком: держат канон-файлы (`README`, `AGENTS.md`, `DESIGN.md`, `llms.txt`) и всегда тянут **latest с `main`** (опционально — закреплённый тег).
 
 ## Быстрый старт (новый ноутбук / после поломки диска)
 
@@ -47,7 +47,7 @@ ma-hub-check-drift            # кэш == хаб?
 | `skills/` | MA-owned skills (оркестраторы Monster Automation) |
 | `registry/` | Проекты + **ссылки** на внешние skills (`external-skills.*`) |
 | `bootstrap/` | Установка, ensure-latest, cloud-ensure, drift |
-| `templates/` | Визитка проекта, обязательные пути релиза, тестовые входы QA, cloud setup, эталоны хуков, thin CI, Telegram-апдейт клиенту |
+| `templates/` | Канон-файлы продукта, обязательные пути релиза, тестовые входы QA, cloud setup, эталоны хуков, thin CI, Telegram-апдейт клиенту |
 | `docs/user-rules.md` | Бэкап личных правил Cursor |
 | `docs/hub-maintenance.md` | Как не забыть обновить хаб |
 | `docs/auto-sync.md` | Daily/version sync + Cloud Agent |
@@ -66,12 +66,12 @@ ma-hub-check-drift            # кэш == хаб?
 
 ## В каждом проекте
 
-Скопируйте шаблон `templates/project-ma-link.md` → `docs/MA-STANDARDS.md`.  
-Политика по умолчанию: **track `main`** (всегда свежее). Для критичного продукта можно закрепить тег.
+Канон: `README.md`, `AGENTS.md`, `DESIGN.md`, `llms.txt` (эталон `templates/project-canonical-pack.md`).  
+Политика по умолчанию: **track `main`** (всегда свежее). Для критичного продукта pin в `AGENTS.md`.
 
 Затем: `/MA-revise-project`.
 
 ## Версии
 
 - Версия стандартов: `standards/VERSION`
-- Политика: всегда latest с `main` + weekly pull; для критичных продуктов — pin tag в `docs/MA-STANDARDS.md`
+- Политика: всегда latest с `main` + weekly pull; для критичных продуктов — pin tag в `AGENTS.md`

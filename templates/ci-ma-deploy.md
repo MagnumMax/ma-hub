@@ -22,7 +22,7 @@
 
 По умолчанию для MA-проектов **убирать** (`dev` → PR → `main` в **своём** репо): checks на PR берутся с того же SHA, что уже прогнали после push в `dev`.
 
-Оставлять `pull_request`, если в `docs/MA-STANDARDS.md` Local deviations явно: **есть форки** / внешние PR. Тогда не дублировать без нужды: либо только `pull_request`, либо осознанно оба (дорого).
+Оставлять `pull_request`, если в `AGENTS.md` Local deviations явно: **есть форки** / внешние PR. Тогда не дублировать без нужды: либо только `pull_request`, либо осознанно оба (дорого).
 
 ### Имена checks / branch protection
 

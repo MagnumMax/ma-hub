@@ -5,7 +5,7 @@
 | Проект | Путь / репо | Policy | Standards applied | Last revise | Notes |
 |--------|-------------|--------|-------------------|-------------|-------|
 | monster_automation_app | ~/monster_automation_app | track main | — | — | домашний продукт агентства |
-| fleet_manager_core | ~/fleet_manager_core | track main | 1.13.1 | 2026-08-18 | multi-tenant fleet; Mira; Core Lock; Geist; monochrome brand; thin CI; customer Telegram; env gitignored; must-work paths 1.13.1 (incl. client portal) |
+| fleet_manager_core | ~/fleet_manager_core | track main | 2.0.0 | 2026-08-29 | CARMASY; канон README/AGENTS/DESIGN; llms.txt из About (route, не public/); Mira; Core Lock; monochrome; must-work paths |
 | roasters | ~/roasters | track main | 1.11.0 | 2026-08-13 | Hospitality CRM; split themes (Inter/editorial); Drizzle; thin CI; customer Telegram ready; segmented deploy 1.11.0; must-work paths incl. Pulse |
 | ai-hr | ~/ai-hr · MagnumMax/ai-hr | track main | 1.7.0 | 2026-07-28 | multi-tenant HR SaaS; Geist portal + Fraunces/Lora marketing; thin CI; Stripe billing |
 | propstat-ae | ~/propstat-ae · MagnumMax/propstat-ae | track main | 1.8.4 | 2026-07-30 | Dubai property analytics; Research Briefing brand; en/ar/ru+RTL; BigQuery+Supabase; thin CI; customer Telegram keys in .env.example |

@@ -32,7 +32,7 @@
 - **Ежедневно** `ensure-latest` подтягивает только если на `origin` новый git SHA или сменился `standards/VERSION`
 - При старте чата Cursor — мягкая проверка (если кэш старше суток)
 - Weekly / вручную `ma-hub-pull` = принудительный sync (`--force`)
-- Критичный продукт: pin tag в `docs/MA-STANDARDS.md`; `MA_HUB_REF=vX.Y.Z ma-hub-ensure-latest`
+- Критичный продукт: pin tag в `AGENTS.md`; `MA_HUB_REF=vX.Y.Z ma-hub-ensure-latest`
 - Облако: [`templates/cloud-ma-setup.md`](../templates/cloud-ma-setup.md) + `cloud-ensure.sh`
 
 ## Правки только в хабе
