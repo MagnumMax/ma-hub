@@ -31,7 +31,7 @@
 
 | Skill | Upstream package | Команды MA |
 |-------|------------------|------------|
-| `ponytail-review` | `dietrichgebert/ponytail` | `/MA-deploy` Phase 1A (сегменты; **с автофиксом** + таблица `net`/`Lean already` по куску). Прочитать skill ≠ прогнать. Не путать с simplify в `/MA-product-pass` |
+| `ponytail-review` | `dietrichgebert/ponytail` | `/MA-deploy` Phase 1A (**один раз на волну**; **с автофиксом** + строка `net`/`Lean already`). Прочитать skill ≠ прогнать. Не путать с simplify в `/MA-product-pass` |
 | `ponytail` | `dietrichgebert/ponytail` | `/MA-idea-to-plan` (вкус простоты, не автофикс деплоя) |
 | `react-doctor` | `millionco/react-doctor` | `/MA-deploy` Phase 2 |
 | `agent-browser` | `vercel-labs/agent-browser` | `/MA-deploy` Phase 7: обязательные пути на проде |
@@ -49,8 +49,8 @@
 
 | Skill | Локальный путь | Команды MA |
 |-------|----------------|------------|
-| `review-bugbot` | `~/.cursor/skills-cursor/review-bugbot/` | `/MA-deploy` Phase 1A: только если сегмент меняет **поведение**; scoped по куску; **не** `/review` |
-| `review-security` | `~/.cursor/skills-cursor/review-security/` | `/MA-deploy` Phase 1A: если сегмент про **вход / роли / платежи / PII / секреты**; scoped по куску; **не** `/review` |
+| `review-bugbot` | `~/.cursor/skills-cursor/review-bugbot/` | `/MA-deploy` Phase 1A: только если **волна** меняет **поведение**; один проход; **не** `/review` |
+| `review-security` | `~/.cursor/skills-cursor/review-security/` | `/MA-deploy` Phase 1A: если **волна** про **вход / роли / платежи / PII / секреты**; один проход; **не** `/review` |
 
 ## Политика свежести
 

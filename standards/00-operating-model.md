@@ -30,7 +30,7 @@
 
 **Внешние skills** (Aaron, Vercel, ponytail…) — **не** копируются в хаб. В хабе только реестр ссылок: `registry/external-skills.md` + `registry/external-skills.manifest`. Установка/обновление с upstream: `bootstrap/install-external-skills.sh` (weekly / bootstrap). При запуске `/MA-*` агент **читает** актуальный `SKILL.md` с диска (пути — в реестре).
 
-**Cursor-native** (`review-bugbot`, `review-security`) — из `~/.cursor/skills-cursor/`, не через manifest. В `/MA-deploy` Phase 1A: не меню `/review`; bugbot — если кусок меняет поведение; security — если вход/роли/платежи/PII/секреты; костяк всегда `/code-review`.
+**Cursor-native** (`review-bugbot`, `review-security`) — из `~/.cursor/skills-cursor/`, не через manifest. В `/MA-deploy` Phase 1A: не меню `/review`; bugbot — если **волна** меняет поведение; security — если волна про вход/роли/платежи/PII/секреты; костяк всегда `/code-review` **один раз на волну**.
 
 ### 4. Standards (эта папка в **ma-hub**) — закон продукта
 Общие требования: предпочтения UI, авторизация, канбан, качество, релиз.  
