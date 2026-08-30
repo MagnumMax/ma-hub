@@ -49,8 +49,8 @@
 
 | Skill | Локальный путь | Команды MA |
 |-------|----------------|------------|
-| `review-bugbot` | `~/.cursor/skills-cursor/review-bugbot/` | `/MA-deploy` Phase 1A: только если **волна** меняет **поведение**; один проход; **не** `/review` |
-| `review-security` | `~/.cursor/skills-cursor/review-security/` | `/MA-deploy` Phase 1A: если **волна** про **вход / роли / платежи / PII / секреты**; один проход; **не** `/review` |
+| `review-bugbot` | `~/.cursor/skills-cursor/review-bugbot/` | `/MA-deploy` Phase 1A и `/MA-signoff`: только если тема меняет **поведение**; один проход; **не** `/review` |
+| `review-security` | `~/.cursor/skills-cursor/review-security/` | `/MA-deploy` Phase 1A и `/MA-signoff`: если тема про **вход / роли / платежи / PII / секреты**; один проход; **не** `/review` |
 
 ## Политика свежести
 
