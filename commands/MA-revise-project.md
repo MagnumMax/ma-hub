@@ -190,7 +190,7 @@ description: Сверить проект с ma-hub standards и подтянут
 - в `.env.example` есть `COMPANY_TELEGRAM_CHAT_ID`, `COMPANY_TELEGRAM_THREAD_ID_UPDATES` (без секретов)
 - в `.env.local` заполнены `COMPANY_*` для топика **Updates** (не ops-алерты)
 - общий бот: `MA_TELEGRAM_BOT_TOKEN` в `~/.config/ma-hub/telegram.env` на машине (не в git продукта)
-- формат апдейтов — **единый** Slack/GitHub тон (What's New / Improvements / Fixes); полное полезное покрытие (не «топ-6»); Local deviations только язык/чат, не другая структура
+- формат апдейтов — **единый** Slack/GitHub тон (строка сути сразу под заголовком; What's New / Improvements / Fixes); полное полезное покрытие (не «топ-6»); Local deviations только язык/чат, не другая структура
 - нет chat id при revise — замечание: при выборе «да, уведомить клиента» `/MA-deploy` Phase 7.5 попросит добавить ключи; при «нет (только техника)» ключи не требуются
 
 ### Тестовые входы для обязательных путей — все продукты
