@@ -29,7 +29,7 @@ argument-hint: [auto | check-only | skip-merge]
 | **safe** (default) | `/MA-deploy`, `check-only`, `skip-merge` | Не чинить блокеры вне 1A. Блокер → Таблица 6 → ждать «чини» / «не чинить» / «отложить». **Исключение Phase 1A:** Critical/High + явный ponytail — чинить сразу |
 | **auto** | `auto` (+ можно `check-only` / `skip-merge`) | Чинить блокеры без паузы (CI→эталон thin+дешёвый, хуки→шаблон, Critical, fails, ревью волны). Ponytail в 1A — с автофиксом |
 
-**Safe:** толстый/дорогой CI / тяжёлые хуки / fail проверок → стоп, не commit, не push. Грязное дерево в начале — **не** блокер. В 1A Critical/High и явный ponytail чинятся сразу; оставшийся ponytail `net ≤ -80` после автофикса → стоп. Medium/Low → сводный backlog, пауза на решения.
+**Safe:** толстый/дорогой CI / `pnpm test` в Actions / тяжёлые хуки / fail проверок → стоп, не commit, не push. Грязное дерево в начале — **не** блокер. В 1A Critical/High и явный ponytail чинятся сразу; оставшийся ponytail `net ≤ -80` после автофикса → стоп. Medium/Low → сводный backlog, пауза на решения.
 
 **Auto:** без подтверждений на фикс; root cause → fix **в дереве без commit** → re-check, макс. 5 итераций на фазу. Не сошлось → стоп с отчётом. Ponytail в 1A с автофиксом; при `net ≤ -80` после фикса — пометить и **продолжить**. Commits только в Phase 3.9.
 
@@ -50,14 +50,14 @@ argument-hint: [auto | check-only | skip-merge]
 
 Локально перед push: 1–3.5 → **3.8** → **3.9** → **3.95** → 4. `pnpm build` = эмуляция Vercel; Preview на `dev` **не** ждём.
 
-**Анти-повторы (закон):** один полный suite в Phase 1 + один CI после push + один Vercel prod. Полный test на каждый commit 3.9 — **запрещён**. Конфликты снимать в 3.95 **до** PR. Перед build — место на диске / очистка `.next`. `--no-verify` не дефолт. Эталон хуков: `$MA_HUB_ROOT/templates/git-hooks-ma-deploy.md`. Эталон CI: `$MA_HUB_ROOT/templates/ci-ma-deploy.md` (минуты = job’ы × запуски на коммит).
+**Анти-повторы (закон):** один полный test suite в Phase 1 (только локально) + один CI после push + один Vercel prod. Полный test на каждый commit 3.9, в git-хуках и в GitHub Actions — **запрещён**. Конфликты снимать в 3.95 **до** PR. Перед build — место на диске / очистка `.next`. `--no-verify` не дефолт. Эталон хуков: `$MA_HUB_ROOT/templates/git-hooks-ma-deploy.md`. Эталон CI: `$MA_HUB_ROOT/templates/ci-ma-deploy.md` (минуты = job’ы × запуски на коммит).
 
-**Где что:** тяжёлое локально (1–3.5); CI = только `{typecheck, test}` в **одном** job с одним install; любой другой CI job / дубль `pull_request` без форков = **блокер** (не «подождать и пойти»).
+**Где что:** тяжёлое локально (1–3.5), **tests только здесь**; CI = только `{typecheck, lint}` в **одном** job с одним install; `pnpm test` в Actions / любой другой CI job / дубль `pull_request` без форков = **блокер** (не «подождать и пойти»).
 
 | Проверка | Phase | Где |
 |----------|-------|-----|
 | Ревью волны (code-review + ponytail один раз) | 0W–1A | эталон `templates/segmented-review-ma-deploy.md` |
-| typecheck / lint / i18n / tests | 1B (+ typecheck/test в CI 5) | scripts из плана |
+| typecheck / lint / i18n / tests | 1B (tests **только** локально; typecheck/lint ещё в CI 5) | scripts из плана |
 | react-doctor | 2 | skill `react-doctor` |
 | build + bundle-budget | 3 | `pnpm build`, `pnpm check:bundle-budget` |
 | supabase | 3.5 | MCP/CLI если diff |
@@ -71,7 +71,7 @@ argument-hint: [auto | check-only | skip-merge]
 1. **Ветки:** только `dev` → PR → `main`. Нет `dev` — создай от `main` до Phase 4.
 2. **Merge:** только `gh pr merge --merge`. Squash/rebase **запрещены**.
 3. **Commits только в конце локального цикла:** 1–3.5 по dirty tree; фиксы копятся без commit; после зелёных 1–3.5 → **3.8** (уборка) → 3.9 сам (без «ок?» по коммитам) → 3.95 → один push.
-4. **Полный test** — один раз в Phase 1 (+ thin CI). Тяжёлые хуки / дорогой CI (много job’ов, дубль PR) = блокер Phase 0.
+4. **Полный test** — один раз в Phase 1, **только локально**. Не в CI, не в git-хуках. Тяжёлые хуки / test в Actions / дорогой CI (много job’ов, дубль PR) = блокер Phase 0.
 5. **3.95 обязателен** до push и до PR. Конфликт «всплыл на PR» = ошибка процесса.
 6. **React Doctor:** `npx react-doctor@latest --verbose --scope changed --blocking error`; baseline `.react-doctor/baseline.json`; monorepo — из React-корня.
 7. Не подменять этот pipeline чужим land-flow. Обязательные пути на проде — эталон `templates/release-must-work-paths.md`, не полный `/qa` с фиксами.
@@ -86,19 +86,19 @@ argument-hint: [auto | check-only | skip-merge]
 1. Корень проекта / React-корень monorepo; `move_agent_to_root` если нужно.
 2. Прочитай `.github/workflows/` (сверка с `templates/ci-ma-deploy.md`), `package.json` scripts, ветки, `supabase/` → `HAS_SUPABASE`, prod URL из Vercel. Загрузи обязательные пути из `AGENTS.md` (ворота выше уже прошли).  
 3. Таблица «План проекта»: проверка → phase → в CI? → job → команда/skill.  
-   Только локально: ревью волны + ponytail (доказательство = одна строка таблицы 2b, не в CI), lint, i18n, doctor, build, budget, supabase.  
+   Только локально: ревью волны + ponytail (доказательство = одна строка таблицы 2b, не в CI), **tests**, i18n, doctor, build, budget, supabase. Lint — локально в 1B **и** в CI.  
    На проде (Phase 7): обязательные пути из `AGENTS.md`.  
-   `CI_JOBS_TO_WAIT` = тонкий job (эталон: один `typecheck-and-test`).
+   `CI_JOBS_TO_WAIT` = тонкий job (эталон: один `typecheck-and-lint`).
 4. **Thin + cheap CI gate** (эталон `$MA_HUB_ROOT/templates/ci-ma-deploy.md` / `ci-ma-deploy.yml`):
-   - **Состав:** только typecheck и/или test → ок. Любой другой job (lint, build, e2e, doctor…) → блокер «CI толще шаблона».
-   - **Форма:** typecheck+test в **одном** job с одним install. Два+ параллельных job’а с повторным install → блокер «CI дороже эталона».
+   - **Состав:** только typecheck и/или lint → ок. `pnpm test` / любой другой job (build, e2e, doctor, i18n…) → блокер «CI толще шаблона».
+   - **Форма:** typecheck+lint в **одном** job с одним install. Два+ параллельных job’а с повторным install → блокер «CI дороже эталона».
    - **События:** только `push` на `main`/`dev`. Одновременно `pull_request` на те же ветки **без** Local deviation «есть форки» → блокер «дубль событий на коммит».
    - **Concurrency:** желательно `cancel-in-progress`; нет — в auto добавить; в safe — замечание (не блокер, если остальное ок).
    - Нет workflow → Phase 5 skip.  
-   Закрытие: привести workflow к эталону. **safe** — стоп; **auto** — правь в дереве без commit (в 3.9). После смены имени job — напомнить обновить required checks в GitHub. Не «подождать толстые/дорогие job’ы».
+   Закрытие: привести workflow к эталону (убрать test из Actions, оставить typecheck+lint). **safe** — стоп; **auto** — правь в дереве без commit (в 3.9). После смены имени job (`typecheck-and-test` → `typecheck-and-lint`) — напомнить обновить required checks в GitHub. Не «подождать толстые/дорогие job’ы».
 5. Ветки `dev`/`main`; нет `dev` — создай и запушь.
-6. **Hooks gate** (как CI gate): эталон `templates/git-hooks-ma-deploy.md`. Тяжёлый pre-commit (полный test без `MA_ATOMIC_PACKING=1`) → блокер.  
-   **safe** — стоп; **auto** — привести к шаблону в дереве. Не обходить `--no-verify`. Pre-push с полным suite один раз — ок.
+6. **Hooks gate** (как CI gate): эталон `templates/git-hooks-ma-deploy.md`. Тяжёлый pre-commit / pre-push с полным `pnpm test` → блокер.  
+   **safe** — стоп; **auto** — привести к шаблону в дереве. Не обходить `--no-verify`. Pre-push с typecheck один раз — ок; test в хуках — нет.
 7. Не упаковывай commits в Phase 0.
 
 **Gate:** план готов + CI thin+cheap + hooks light (или auto уже поправил) → Phase 1 (сначала 0W).
@@ -354,7 +354,7 @@ Skip при `check-only` / `skip-merge`. Эталон: `$MA_HUB_ROOT/templates/c
 - Critical/High волны не закрыты; нет доказательства ponytail волны (нет строки таблицы 2b с `net` или `Lean already. Ship.`); «прочитал skill» / обычное ревью ≠ ponytail; переход к 1B / 3.9 / push без 2b; ponytail по кускам или на весь грязный ком; ponytail `net ≤ -80` после автофикса в safe; нет `ponytail-review` на диске; ревью чужих волн «заодно»; чинить чужую волну, чтобы проверки стали зелёные
 - Fail typecheck/lint/i18n/test; doctor errors/score; disk < 1 GiB / повторный ENOSPC
 - Fail build/budget — **push запрещён**
-- Supabase в diff без плана; красный CI; CI толще thin или дороже эталона (много job’ов / дубль PR); тяжёлые хуки
+- Supabase в diff без плана; красный CI; `pnpm test` в Actions; CI толще thin или дороже эталона (много job’ов / дубль PR); тяжёлые хуки / test в хуках
 - Нет блока обязательных путей (и нет ответа «дописать здесь» / «сначала сверка»); запуск `/MA-revise-project` изнутри выката
 - Провал выбранного обязательного пути на проде; отказ создать QA-учётки; неубитый тестовый объект после прогона; переход к 7.5 после провала пути или без уборки; правка кода на уже выложенном проде; пароль тестового входа в чат/отчёт/git (кроме канона в хабе)
 - PR conflict / fail checks; push не в `dev`; Vercel не READY

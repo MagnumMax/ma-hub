@@ -174,16 +174,16 @@ description: Сверить проект с ma-hub standards и подтянут
 
 ### Git-хуки и CI vs `/MA-deploy` (скорость релиза + минуты Actions) — все проекты
 Сверить husky / lefthook / pre-commit с `$MA_HUB_ROOT/templates/git-hooks-ma-deploy.md` (**жёсткий gate** в `/MA-deploy` Phase 0):
-- pre-commit гоняет полный `pnpm test` / vitest без `MA_ATOMIC_PACKING=1`? → **блокер** (в auto чинит `/MA-deploy`, в safe ждёт «чини»)
+- pre-commit или pre-push гоняет полный `pnpm test` / vitest? → **блокер** (тесты только локально в `/MA-deploy` Phase 1; в auto чинит `/MA-deploy`, в safe ждёт «чини»)
 
 Сверить `.github/workflows/` с `$MA_HUB_ROOT/templates/ci-ma-deploy.md` (**тот же gate**):
-- job’ы кроме typecheck/test → блокер «толще шаблона»
-- два+ job’а typecheck/test с повторным install → блокер «дороже эталона» (склеить в один)
+- job’ы кроме typecheck/lint (в т.ч. `pnpm test`) → блокер «толще шаблона»
+- два+ job’а typecheck/lint с повторным install → блокер «дороже эталона» (склеить в один)
 - `push` + `pull_request` на `main`/`dev` без Local deviation «форки» → блокер «дубль событий»
 - нет concurrency cancel-in-progress → замечание (в auto — добавить)
 
 - Отдельный revise только ради хуков/CI **не обязателен**, если следующий шаг — `/MA-deploy auto`
-- **Не** предлагать ослабить thin-состав или убрать локальный build — экономим форму (job’ы × события), не покрытие
+- **Не** предлагать вернуть test в CI/хуки или убрать локальный test/build — тесты локально; CI = typecheck+lint
 
 ### Клиентский Telegram после прода — продукты с внешними заказчиками
 Сверить с `$MA_HUB_ROOT/templates/telegram-customer-update-ma-deploy.md` (+ snippet `templates/env-customer-telegram.snippet`):
